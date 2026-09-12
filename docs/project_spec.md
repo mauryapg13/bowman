@@ -194,6 +194,20 @@ income and 21-day dining are real streams the samples expect.
 `docs/mvp_results.md` records the count of streams per cadence bucket so a
 future band change is measured, not argued.
 
+**Absorption of scheduled occurrences.** 47 users carry a `scheduled` "Next
+confirmed salary" row (and a few carry scheduled school-fee / insurance /
+utility rows) that is the *next occurrence* of an already-detected stream
+under a different description — 45 of 47 even repeat the amount. Left as a
+one-off, the ledger would count that salary twice on the same day (once
+predicted, once recorded). So after detection: a `scheduled` event with the
+same `(direction, category)` as **exactly one** stream, dated one cadence
+(±10 days) after that stream's anchor, joins the stream as its latest
+*recorded* occurrence (new anchor, new `latest_event_id`). Settled history is
+never absorbed; nothing is invented — the row exists. Measured: 48
+absorptions on the shipped data. When no stream exists (e.g. `user_01`, one
+prorated salary), the scheduled row stays a one-off and income after it is
+not forecast — the conservative reading N6 demands.
+
 Recurring expansion places occurrences at `anchor + k·cadence_days` for every
 `k` landing in 0..90, subject to §4.1. Anchors before day 0 roll forward by
 whole cadences; they are never skipped.
@@ -567,5 +581,6 @@ Shipped docs and verified data win over this file. Every change is listed.
 | 2026-09-13 | §4.6, §7 | Vision moved out of `load.py` into `amounts.py`; `load` is port-free | load must run with no key/OCR |
 | 2026-09-13 | §7 | `spending.py` returns new stream lists; `Stream` frozen; `main.run()`; `Decision.diagnostics` | decoupling review |
 | 2026-09-13 | §9 | Calibration is a CI test, not only a printout | — |
+| 2026-09-13 | §4.2 | Absorption of scheduled occurrences into their stream (prevents same-day double count) | 47 scheduled salaries, 45 same amount as last payroll |
 | 2026-09-13 | §4.7 | New: single missing-information table; adds the no-effective-date and no-currency rules | user question 2026-09-13 |
 | 2026-09-13 | §4.6 | Message-quoted foreign amounts convert in `amend.py` at the occurrence's settlement-date row (AGENTS.md §6.1); latest-on-or-before fallback for dates with no row | 7 foreign-salary messages; rates constant per pair |
