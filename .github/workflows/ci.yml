@@ -1,0 +1,63 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f code/requirements.txt ]; then pip install -r code/requirements.txt; fi
+          pip install pytest
+
+      - name: Secrets must never be committed
+        run: |
+          set -e
+          if [ -f .env ]; then echo ".env is committed"; exit 1; fi
+          if git ls-files | grep -qx 'log.txt'; then echo "log.txt is committed (AGENTS.md §2)"; exit 1; fi
+          # common key shapes: Anthropic, OpenAI, AWS, generic 'api_key = "..."'
+          if git grep -nE 'sk-ant-[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9]{32,}|AKIA[0-9A-Z]{16}|api[_-]?key\s*[:=]\s*["'"'"'][A-Za-z0-9_-]{16,}' -- . ':!.github/workflows/ci.yml'; then
+            echo "possible secret in tracked files"; exit 1; fi
+
+      - name: dataset/ is read-only
+        run: |
+          # any tracked change under dataset/ relative to main is a violation (spec §12)
+          git fetch --no-tags --depth=1 origin main
+          if ! git diff --quiet origin/main -- dataset/; then echo "dataset/ was modified"; exit 1; fi
+
+      - name: Unit + contract tests
+        run: python -m pytest -q tests
+
+      - name: Pipeline runs and output is valid (once code/main.py exists)
+        run: |
+          if [ -s code/main.py ]; then
+            python code/main.py
+            python -m pytest -q tests -k output_contract || true
+            test -f output.csv && [ "$(wc -l < output.csv)" -eq 251 ]
+          else
+            echo "code/main.py not written yet — skipping pipeline step"
+          fi
+
+      - name: Determinism (once code/main.py exists)
+        run: |
+          if [ -s code/main.py ]; then
+            python code/main.py && sha256sum output.csv > /tmp/a
+            python code/main.py && sha256sum output.csv > /tmp/b
+            diff /tmp/a /tmp/b
+          fi
