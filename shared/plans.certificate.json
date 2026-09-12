@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/plans",
+  "title": "Certificate: code/plans.py",
+  "module": "code/plans.py",
+  "stage": "MVP M5 (+ V1-5 variants)",
+  "spec": [
+    "project_spec.md §5 candidates",
+    "§6"
+  ],
+  "signature": "candidates(request, profile, options, ledger, capacity, streams, oneoffs, config) -> list[Candidate]",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "request",
+      "profile",
+      "options",
+      "ledger",
+      "capacity",
+      "streams",
+      "oneoffs",
+      "config"
+    ],
+    "properties": {
+      "request": {
+        "$ref": "types.schema.json#/$defs/Request"
+      },
+      "profile": {
+        "$ref": "types.schema.json#/$defs/Profile"
+      },
+      "options": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/PaymentOption"
+        }
+      },
+      "ledger": {
+        "$ref": "types.schema.json#/$defs/Ledger"
+      },
+      "capacity": {
+        "$ref": "types.schema.json#/$defs/Capacity"
+      },
+      "streams": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Stream"
+        }
+      },
+      "oneoffs": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/OneOff"
+        }
+      },
+      "config": {
+        "$ref": "types.schema.json#/$defs/RunConfig"
+      }
+    }
+  },
+  "output": {
+    "type": "array",
+    "items": {
+      "$ref": "types.schema.json#/$defs/Candidate"
+    }
+  },
+  "guarantees": [
+    "Families: one full_payment (from the request's full_payment option), one per installment option (dates = first + k*frequency, amounts = payment_amount), partial_payment iff I5 holds, wait iff earliest_full_day is not null.",
+    "safe computed by subtracting cumulative payments from balance and checking >= floor on every day 0..90.",
+    "total_paid = total_payable_amount for option-backed candidates, else requested_amount.",
+    "completes_by_deadline = last payment date <= desired_completion_date.",
+    "Spending-change variants (config.spending_changes) generated only if no change-free candidate is both safe and on time; subsets in increasing size ordered by event_id, max 3; each variant re-runs ledger.forecast on the changed streams; amount_safe_to_pay is NOT recomputed.",
+    "sort_key filled per spec §5; eligible/rejection_reasons filled by filters 1-2 (rank may re-check)."
+  ],
+  "forbidden": [
+    "mutating ledger or streams",
+    "using LLM output",
+    "cascading if/elif preference logic"
+  ]
+}

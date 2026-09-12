@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/ledger",
+  "title": "Certificate: code/ledger.py",
+  "module": "code/ledger.py",
+  "stage": "MVP M4",
+  "spec": [
+    "project_spec.md §3",
+    "§4.1"
+  ],
+  "signature": "forecast(streams, oneoffs, start: date, opening: float, floor: float) -> Ledger ; capacity(ledger, requested_amount) -> Capacity",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "streams",
+      "oneoffs",
+      "start",
+      "opening",
+      "floor",
+      "requested_amount"
+    ],
+    "properties": {
+      "streams": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Stream"
+        }
+      },
+      "oneoffs": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/OneOff"
+        }
+      },
+      "start": {
+        "$ref": "types.schema.json#/$defs/Date"
+      },
+      "opening": {
+        "$ref": "types.schema.json#/$defs/Money"
+      },
+      "floor": {
+        "$ref": "types.schema.json#/$defs/Money"
+      },
+      "requested_amount": {
+        "$ref": "types.schema.json#/$defs/Money"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "ledger",
+      "capacity"
+    ],
+    "properties": {
+      "ledger": {
+        "$ref": "types.schema.json#/$defs/Ledger"
+      },
+      "capacity": {
+        "$ref": "types.schema.json#/$defs/Capacity"
+      }
+    }
+  },
+  "guarantees": [
+    "91 days, day 0 = start. balance[d] = opening + sum of placements with day <= d (credits +, debits -).",
+    "Merge rule: recorded occurrences placed first; predicted occurrences at anchor + k*cadence only for days strictly after the stream's last recorded occurrence; assertion fails if a predicted and recorded placement share (stream_id, day).",
+    "Anchors before day 0 roll forward by whole cadences.",
+    "Amendments: occurrences on/after effective_date use new_amount; ended => no occurrences on/after; one_occurrence_only => only the first occurrence on/after.",
+    "One-offs placed at (date - start).days if within 0..90; otherwise ignored.",
+    "suffix_min[d] = min(balance[d:]); non-decreasing.",
+    "amount_safe_to_pay = clamp(suffix_min[0] - floor, 0, requested_amount); earliest_full_day = first d with suffix_min[d] - requested_amount >= floor, else null.",
+    "Pure: same inputs => identical arrays. Cached on (user_id, start)."
+  ],
+  "forbidden": [
+    "reading profile preferences",
+    "reading payment options",
+    "reading spending-change eligibility"
+  ]
+}

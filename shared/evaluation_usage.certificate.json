@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/evaluation_usage",
+  "title": "Certificate: code/evaluation/usage.py (+ usage_report.md)",
+  "module": "code/evaluation/usage.py (+ usage_report.md)",
+  "stage": "V1-7",
+  "spec": [
+    "AGENTS.md §6.5",
+    "V1.md V1-7"
+  ],
+  "signature": "record(UsageRecord) appends to code/evaluation/usage.jsonl ; report() -> writes usage_report.md",
+  "input": {
+    "type": "array",
+    "items": {
+      "$ref": "types.schema.json#/$defs/UsageRecord"
+    }
+  },
+  "output": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "report_path",
+      "totals"
+    ],
+    "properties": {
+      "report_path": {
+        "type": "string",
+        "const": "code/evaluation/usage_report.md"
+      },
+      "totals": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "calls",
+          "input_tokens",
+          "output_tokens",
+          "total_tokens",
+          "avg_tokens_per_request",
+          "estimated_cost_usd",
+          "cost_per_request_usd"
+        ],
+        "properties": {
+          "calls": {
+            "type": "integer"
+          },
+          "input_tokens": {
+            "type": "integer"
+          },
+          "output_tokens": {
+            "type": "integer"
+          },
+          "total_tokens": {
+            "type": "integer"
+          },
+          "avg_tokens_per_request": {
+            "type": "number"
+          },
+          "estimated_cost_usd": {
+            "type": "number"
+          },
+          "cost_per_request_usd": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  },
+  "guarantees": [
+    "Instrumented from the first port call of the final run; never reconstructed.",
+    "Per-model and overall totals; states explicitly that decision_explanation used zero model calls.",
+    "Contains no keys or secrets."
+  ],
+  "forbidden": [
+    "estimating tokens by heuristics when the provider returned real counts"
+  ]
+}

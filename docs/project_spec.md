@@ -261,6 +261,51 @@ carry their own currency and convert on the same rule — `event_7307` is a
 blank-amount USD expense for an INR user and needs both. `load.py` never
 calls a port: it must parse the CSVs with no API key and no OCR installed.
 
+**Message-quoted amounts.** AGENTS.md §6.1 gives one FX rule and it applies
+here too: *use the row for the event's settlement date, in the stated
+`from_currency → to_currency` direction.* Seven messages confirm a salary in a
+non-home currency ("Your salary of EUR 1804 is confirmed for 2025-08-15 … the
+receiving bank will convert it using the rate applied on the settlement
+date"). So `ports/ops` returns the amount **as quoted, with its currency**;
+`amend.py` converts it with the rate row for the occurrence's settlement date
+— the `effective_date` for a confirmed one-off, the occurrence date for a
+stream. The model never converts.
+
+**Dates with no rate row.** Recorded events always have an exact row (recon:
+140/140). Predicted or amended occurrences may fall on a date with no row
+(rows exist on the 15th of each month, 2023-10-15 … 2026-11-15). For those,
+use the latest row on or before the date and record `rate_date_used` in
+provenance. Recon shows every pair's rate is constant across all dates
+(USD→INR 83.33, USD→IDR 15833.33, USD→EUR 0.92, EUR→USD 1.09, EUR→ZAR 20), so
+this fallback is numerically neutral on this dataset; `tests/` asserts that
+constancy so a future dataset with moving rates fails loudly instead of
+silently using a stale row.
+
+### 4.7 Missing information — the single lookup table
+
+When something is absent, the answer is here, not in a judgement call. Each
+row names the module that owns the rule and what the diagnostics must show.
+
+| Missing thing | Rule | Owner | Trace |
+|---|---|---|---|
+| Blank `amount`, linked image exists (all 16 in the shipped data) | `amounts.py` fills it from the vision port. If the port fails or returns a non-conforming result, `amount` stays `None`. | `amounts` | `VisionResult` or the port error |
+| Blank `amount`, no image, or port failed | Excluded, `exclusion_reason = amount_unknown`. An unknown outflow cannot be reserved as a number; it must never be treated as 0. | `inclusion` | exclusion entry |
+| No scheduled salary row (228 users) | Use detected recurring credit streams. None ⇒ **zero forecast income**. Never synthesise (N6). | `recurrence` | `zero_income = true` |
+| No exchange-rate row for a **recorded** event | Hard error; the run stops. | `load` | exception |
+| No rate row on a **predicted/amended** date | Latest row on or before that date; `rate_date_used` recorded. | `amend`, `ledger` | `Amendment.rate_date_used` |
+| Message changes an amount but gives no `effective_date` | Applies from the first occurrence **after** `request_date`. Occurrences on or before the request are history and cannot change. | `amend` | `Amendment.effective_date` set by code |
+| Message quotes no currency | Home currency assumed; `Amendment.currency = null`. | `amend` | `Amendment` |
+| Message target not in the allow-list, or op outside the enum | Operation becomes `none`; nothing changes. | `ports/ops` | `Operation` with `op = none` |
+| `linked_event_id` pattern not in the §4.4 table | Precedence ladder §4.5; rule 4 = the reading that leaves less money. Never dropped silently. | `links` | `LinkResolution.pattern = unknown` |
+| Ambiguous outflow / inflow | Outflow assumed real; inflow assumed absent (rule 4). | any | provenance string |
+| `max_installment_months` blank | Installments unavailable (verified: all 119 such users omit `installments`). | `rank` | `rejection_reasons` |
+| No safe eligible plan | `not_recommended`, `not_affordable`, plan `none`, date empty. | `rank`, `format` | `chosen = null` |
+| `earliest_date_for_full_payment` not inside days 0..90 | Empty string. `wait` is not a candidate. | `ledger`, `plans` | `Capacity.earliest_full_day = null` |
+| Payment option missing for a request | Cannot happen (every request has 2–4); if it does, `load` raises. | `load` | exception |
+
+Anything not in this table is a new case: add the row **before** writing the
+code that handles it.
+
 ---
 
 ## 5. Candidate plans and ranking
@@ -522,3 +567,5 @@ Shipped docs and verified data win over this file. Every change is listed.
 | 2026-09-13 | §4.6, §7 | Vision moved out of `load.py` into `amounts.py`; `load` is port-free | load must run with no key/OCR |
 | 2026-09-13 | §7 | `spending.py` returns new stream lists; `Stream` frozen; `main.run()`; `Decision.diagnostics` | decoupling review |
 | 2026-09-13 | §9 | Calibration is a CI test, not only a printout | — |
+| 2026-09-13 | §4.7 | New: single missing-information table; adds the no-effective-date and no-currency rules | user question 2026-09-13 |
+| 2026-09-13 | §4.6 | Message-quoted foreign amounts convert in `amend.py` at the occurrence's settlement-date row (AGENTS.md §6.1); latest-on-or-before fallback for dates with no row | 7 foreign-salary messages; rates constant per pair |

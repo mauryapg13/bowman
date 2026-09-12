@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/amend",
+  "title": "Certificate: code/amend.py",
+  "module": "code/amend.py",
+  "stage": "V1-3 (pass-through in MVP)",
+  "spec": [
+    "AGENTS.md §6.1 exchange_rates rule",
+    "project_spec.md §8 P2 P3",
+    "V1.md V1-3"
+  ],
+  "signature": "apply(streams, oneoffs, events, messages, ops: OpsPort | None, fx, home_currency) -> tuple[list[Stream], list[OneOff], list[Operation]]",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "streams",
+      "oneoffs",
+      "events",
+      "messages",
+      "ops",
+      "fx",
+      "home_currency"
+    ],
+    "properties": {
+      "streams": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Stream"
+        }
+      },
+      "oneoffs": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/OneOff"
+        }
+      },
+      "events": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Event"
+        }
+      },
+      "messages": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Message"
+        }
+      },
+      "ops": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "description": "None in MVP → inputs returned unchanged"
+      },
+      "fx": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "number"
+        }
+      },
+      "home_currency": {
+        "$ref": "types.schema.json#/$defs/Currency"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "streams",
+      "oneoffs",
+      "operations"
+    ],
+    "properties": {
+      "streams": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Stream"
+        }
+      },
+      "oneoffs": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/OneOff"
+        }
+      },
+      "operations": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Operation"
+        }
+      }
+    }
+  },
+  "guarantees": [
+    "Allow-list handed to the port = this user's event_ids + stream_ids; any target outside it => op none.",
+    "amend_stream appends an Amendment to a COPY of the stream; cancel on a one-off removes it from the returned oneoffs list; delay moves a one-off's date; amend_amount changes a one-off's amount; confirm and none change nothing.",
+    "FX (AGENTS.md §6.1): a quoted foreign amount is converted with the rate row for the occurrence's settlement date — effective_date for a confirmed one-off, each occurrence date for a stream; if no row exists on that date, the latest row on or before it is used and recorded as rate_date_used. The port never converts.",
+    "Never creates a new Stream or OneOff.",
+    "Runs after recurrence and before ledger."
+  ],
+  "forbidden": [
+    "keyword filtering of message text",
+    "touching another user's records",
+    "touching profile balance or floor"
+  ]
+}

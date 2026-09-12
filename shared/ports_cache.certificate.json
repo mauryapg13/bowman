@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/ports_cache",
+  "title": "Certificate: code/ports/cache.py",
+  "module": "code/ports/cache.py",
+  "stage": "V1-2",
+  "spec": [
+    "project_spec.md §8 P7"
+  ],
+  "signature": "Cache.get(key) -> dict | None ; Cache.put(key, value) -> None ; Cache.key(*parts, prompt_version) -> str",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "key",
+      "value"
+    ],
+    "properties": {
+      "key": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      },
+      "value": {
+        "type": "object"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "value"
+    ],
+    "properties": {
+      "value": {
+        "type": [
+          "object",
+          "null"
+        ]
+      }
+    }
+  },
+  "guarantees": [
+    "Directory of <key>.json files under code/cache/, committed with the submission so the final run is reproducible offline.",
+    "Key = sha256 over the ordered parts plus prompt_version; bumping prompt_version is the only invalidation.",
+    "Reads/writes are atomic (temp + replace); a corrupt file is treated as a miss."
+  ],
+  "forbidden": [
+    "storing secrets",
+    "storing raw image bytes"
+  ]
+}

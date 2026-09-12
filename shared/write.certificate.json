@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/write",
+  "title": "Certificate: code/write.py",
+  "module": "code/write.py",
+  "stage": "MVP M8",
+  "spec": [
+    "project_spec.md §2 invariants I1-I13"
+  ],
+  "signature": "write(decisions: list[Decision], requests: list[Request], profiles, options_by_request, path='output.csv') -> None",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "decisions",
+      "requests",
+      "path"
+    ],
+    "properties": {
+      "decisions": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Decision"
+        }
+      },
+      "requests": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Request"
+        }
+      },
+      "path": {
+        "type": "string",
+        "default": "output.csv"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "written",
+      "violations"
+    ],
+    "properties": {
+      "written": {
+        "type": "boolean"
+      },
+      "violations": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "request_id",
+            "invariant",
+            "detail"
+          ],
+          "properties": {
+            "request_id": {
+              "$ref": "types.schema.json#/$defs/RequestId"
+            },
+            "invariant": {
+              "type": "string",
+              "pattern": "^I(1[0-3]|[1-9])$"
+            },
+            "detail": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "guarantees": [
+    "All of I1..I13 checked on every row before any byte is written; any violation => nothing written, previous file intact, violations raised.",
+    "Exactly one row per request in requests.csv order; header byte-for-byte.",
+    "Temp file -> fsync -> os.replace onto the repo-root path.",
+    "Prints the count of rows with amount_safe_to_pay == 0 (smell test)."
+  ],
+  "forbidden": [
+    "writing under dataset/",
+    "writing on a failed check",
+    "reading diagnostics"
+  ]
+}

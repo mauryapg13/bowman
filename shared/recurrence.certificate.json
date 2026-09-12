@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/recurrence",
+  "title": "Certificate: code/recurrence.py",
+  "module": "code/recurrence.py",
+  "stage": "MVP M3",
+  "spec": [
+    "project_spec.md §4.2",
+    "N6"
+  ],
+  "signature": "detect(events: list[Event], user_id) -> tuple[list[Stream], list[OneOff]]",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "events",
+      "user_id"
+    ],
+    "properties": {
+      "events": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Event"
+        },
+        "description": "included events only are considered; excluded ones are ignored"
+      },
+      "user_id": {
+        "$ref": "types.schema.json#/$defs/UserId"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "streams",
+      "oneoffs",
+      "zero_income"
+    ],
+    "properties": {
+      "streams": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Stream"
+        }
+      },
+      "oneoffs": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/OneOff"
+        }
+      },
+      "zero_income": {
+        "type": "boolean",
+        "description": "true when the user has no credit stream and no scheduled income one-off"
+      }
+    }
+  },
+  "guarantees": [
+    "Grouping unit: (direction, category) for groceries/transport/dining; (direction, category, description) otherwise.",
+    "Stream iff >=3 occurrences and median consecutive gap in [5, 35]; cadence_days = round(median gap); amount = median; anchor = latest occurrence.",
+    "stream_id is deterministic: stream_<user_id>_<n> with n from sorting groups by (direction, category, description or '').",
+    "latest_event_id = event_id of the anchor occurrence.",
+    "Every included event is in exactly one stream's occurrences or exactly one OneOff — never both, never neither.",
+    "No income is synthesised: zero credit streams + zero scheduled credits => zero forecast income."
+  ],
+  "forbidden": [
+    "reading excluded events",
+    "reading messages",
+    "using request_date (detection is history-only)"
+  ]
+}
