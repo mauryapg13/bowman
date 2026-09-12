@@ -165,6 +165,25 @@ def detect(events: list[Event] | tuple[Event, ...], user_id: str) -> Detection:
         else:
             streams.append(s)
 
+    # Category-level fallback (spec §4.2): where the description-level pass found
+    # no stream for a (direction, category) but the category as a whole recurs —
+    # e.g. freelance income under rotating descriptions every ~2 weeks (user_09).
+    covered = {(s.direction, s.category) for s in streams}
+    by_cat: dict[tuple[str, str], list[Event]] = {}
+    for e in leftovers:
+        if (e.direction, e.category) not in covered and e.category not in CATEGORY_LEVEL:
+            by_cat.setdefault((e.direction, e.category), []).append(e)
+    ordinal = len(groups)
+    absorbed_ids: set[str] = set()
+    for cat_key in sorted(by_cat):
+        ordinal += 1
+        s = _make_stream(user_id, ordinal, (cat_key[0], cat_key[1], ""), by_cat[cat_key])
+        if s is not None:
+            s = replace(s, description=None, provenance=(s.provenance[0].replace("description-level", "category-fallback"),))
+            streams.append(s)
+            absorbed_ids.update(o.event_id for o in s.occurrences)
+    leftovers = [e for e in leftovers if e.event_id not in absorbed_ids]
+
     streams, leftovers = _absorb(streams, leftovers)
 
     oneoffs = tuple(

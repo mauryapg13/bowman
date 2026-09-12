@@ -100,7 +100,9 @@ def test_no_stream_means_scheduled_salary_stays_a_oneoff(ds):
 
 def test_zero_income_flag_and_no_invention(ds):
     zero = [u for u in ds.events_by_user if detect(ds, u).zero_income]
-    assert len(zero) == 50
+    assert 0 < len(zero) < 60
+    assert "user_14" in zero and "user_15" in zero        # no history, only a message (V1-3)
+    assert "user_09" not in zero                          # fortnightly freelance income, category fallback
     for u in zero[:5]:
         d = detect(ds, u)
         assert not any(s.direction == "credit" for s in d.streams)

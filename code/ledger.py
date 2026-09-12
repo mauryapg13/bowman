@@ -80,7 +80,24 @@ def _amount_on(stream: Stream, d: date, occurrence_index_after_anchor: int) -> f
     return amount
 
 
+MONTHLY_MIN, MONTHLY_MAX = 28, 31
+
+
+def _add_months(d: date, n: int) -> date:
+    """Same day-of-month n months later, clamped to the month's last day."""
+    import calendar
+    y, m = divmod(d.month - 1 + n, 12)
+    y, m = d.year + y, m + 1
+    return date(y, m, min(d.day, calendar.monthrange(y, m)[1]))
+
+
 def _nth_date(stream: Stream, n: int) -> date:
+    """Monthly streams (median gap 28-31) recur on the anchor's day-of-month —
+    the samples key salary on the 15th every month, and day arithmetic drifts
+    (30-day steps put 15 Sep, 15 Oct, 15 Nov on 13 Nov). Shorter cadences use
+    day arithmetic."""
+    if MONTHLY_MIN <= stream.cadence_days <= MONTHLY_MAX:
+        return _add_months(stream.anchor, n)
     return stream.anchor + timedelta(days=stream.cadence_days * n)
 
 

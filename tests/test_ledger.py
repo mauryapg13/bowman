@@ -20,24 +20,35 @@ def days_of(led, kind=None, source=None):
 
 
 def test_past_anchor_rolls_forward_never_skipped():
-    led = LG.forecast([stream(START - timedelta(days=10), cadence=30)], [], START, 1000, 0)
-    assert days_of(led, "predicted") == [20, 50, 80]
+    led = LG.forecast([stream(START - timedelta(days=10), cadence=20)], [], START, 1000, 0)
+    assert days_of(led, "predicted") == [10, 30, 50, 70, 90]
     assert days_of(led, "recorded") == []          # anchor is before day 0
 
 
 def test_anchor_on_day_zero_is_recorded_not_predicted():
-    led = LG.forecast([stream(START, cadence=30)], [], START, 1000, 0)
-    assert days_of(led, "recorded") == [0] and days_of(led, "predicted") == [30, 60, 90]
+    led = LG.forecast([stream(START, cadence=20)], [], START, 1000, 0)
+    assert days_of(led, "recorded") == [0] and days_of(led, "predicted") == [20, 40, 60, 80]
+
+
+def test_monthly_streams_keep_the_day_of_month():
+    # anchor 15 Feb, cadence 31 -> 15 Mar, 15 Apr, 15 May (not 17 Mar / 17 Apr)
+    led = LG.forecast([stream(date(2024, 2, 15), cadence=31)], [], START, 1000, 0)
+    got = [START + timedelta(days=d) for d in days_of(led, "predicted")]
+    assert got == [date(2024, 3, 15), date(2024, 4, 15), date(2024, 5, 15)]
+    # 31 Jan anchor clamps to month ends
+    led = LG.forecast([stream(date(2024, 1, 31), cadence=30)], [], date(2024, 2, 1), 1000, 0)
+    got = [date(2024, 2, 1) + timedelta(days=d) for d in days_of(led, "predicted")]
+    assert got == [date(2024, 2, 29), date(2024, 3, 31), date(2024, 4, 30)]
 
 
 def test_recorded_occurrences_after_request_date_are_not_duplicated():
     occs = (Occurrence("event_1", START - timedelta(days=25), 100.0),
             Occurrence("event_2", START + timedelta(days=5), 100.0),
             Occurrence("event_3", START + timedelta(days=35), 100.0))
-    s = stream(START + timedelta(days=35), cadence=30, occurrences=occs)
+    s = stream(START + timedelta(days=35), cadence=20, occurrences=occs)
     led = LG.forecast([s], [], START, 1000, 0)
     assert days_of(led, "recorded") == [5, 35]
-    assert days_of(led, "predicted") == [65]
+    assert days_of(led, "predicted") == [55, 75]
     assert len([p for p in led.placements if p.day == 35]) == 1
 
 
@@ -46,10 +57,10 @@ def test_stale_anchor_cannot_double_place():
     programmer error), prediction starts strictly after the last recorded
     day, so the same stream can never land twice on one day."""
     occs = (Occurrence("event_1", START, 100.0), Occurrence("event_2", START + timedelta(days=30), 100.0))
-    s = stream(START, cadence=30, occurrences=occs)   # stale anchor at day 0
+    s = stream(START, cadence=20, occurrences=occs)   # stale anchor at day 0
     led = LG.forecast([s], [], START, 1000, 0)
     assert days_of(led, "recorded") == [0, 30]
-    assert days_of(led, "predicted") == [60, 90]
+    assert days_of(led, "predicted") == [40, 60, 80]
     per_day = {}
     for p in led.placements:
         per_day[p.day] = per_day.get(p.day, 0) + 1
@@ -108,15 +119,15 @@ def test_amendments_raise_end_and_one_off_reduction():
     s = stream(anchor, cadence=30, amount=100, direction="credit", amendments=(raise_,))
     led = LG.forecast([s], [], START, 0, 0)
     got = {p.day: p.amount for p in led.placements}
-    assert got == {15: 100.0, 45: 150.0, 75: 150.0}
+    assert got == {14: 100.0, 45: 150.0, 75: 150.0}
 
     ended = Amendment(START + timedelta(days=40), None, None, None, None, True, False, "message_2", "amend_stream")
     led = LG.forecast([stream(anchor, 30, 100, direction="credit", amendments=(ended,))], [], START, 0, 0)
-    assert sorted(p.day for p in led.placements) == [15]
+    assert sorted(p.day for p in led.placements) == [14]
 
     once = Amendment(START + timedelta(days=1), 60.0, 60.0, "INR", None, False, True, "message_3", "amend_stream")
     led = LG.forecast([stream(anchor, 30, 100, direction="credit", amendments=(once,))], [], START, 0, 0)
-    assert {p.day: p.amount for p in led.placements} == {15: 60.0, 45: 100.0, 75: 100.0}
+    assert {p.day: p.amount for p in led.placements} == {14: 60.0, 45: 100.0, 75: 100.0}
 
 
 def test_determinism():
