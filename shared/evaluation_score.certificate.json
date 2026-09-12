@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/evaluation_score",
+  "title": "Certificate: code/evaluation/score.py",
+  "module": "code/evaluation/score.py",
+  "stage": "MVP M9",
+  "spec": [
+    "project_spec.md §9",
+    "MVP.md M9"
+  ],
+  "signature": "score(decisions: list[Decision], expected: list[SampleAnswer]) -> ScoreReport ; CLI prints tables",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "decisions",
+      "expected"
+    ],
+    "properties": {
+      "decisions": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Decision"
+        }
+      },
+      "expected": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "request_id",
+            "row",
+            "requested_amount",
+            "minimum_balance_to_keep"
+          ],
+          "properties": {
+            "request_id": {
+              "$ref": "types.schema.json#/$defs/RequestId"
+            },
+            "row": {
+              "$ref": "types.schema.json#/$defs/OutputRow"
+            },
+            "requested_amount": {
+              "$ref": "types.schema.json#/$defs/Money"
+            },
+            "minimum_balance_to_keep": {
+              "$ref": "types.schema.json#/$defs/Money"
+            }
+          }
+        }
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "per_column",
+      "safe_amount",
+      "calibration",
+      "mismatches"
+    ],
+    "properties": {
+      "per_column": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "number"
+        },
+        "description": "accuracy per output column, 0..1"
+      },
+      "safe_amount": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "abs_err_mean",
+          "rel_err_mean",
+          "within_half_pct"
+        ],
+        "properties": {
+          "abs_err_mean": {
+            "type": "number"
+          },
+          "rel_err_mean": {
+            "type": "number"
+          },
+          "within_half_pct": {
+            "type": "integer"
+          }
+        }
+      },
+      "calibration": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "request_id",
+            "expected_min",
+            "our_min",
+            "delta",
+            "capped"
+          ],
+          "properties": {
+            "request_id": {
+              "$ref": "types.schema.json#/$defs/RequestId"
+            },
+            "expected_min": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "our_min": {
+              "type": "number"
+            },
+            "delta": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "capped": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "mismatches": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "request_id",
+            "column",
+            "expected",
+            "actual"
+          ],
+          "properties": {
+            "request_id": {
+              "$ref": "types.schema.json#/$defs/RequestId"
+            },
+            "column": {
+              "type": "string"
+            },
+            "expected": {
+              "type": "string"
+            },
+            "actual": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "guarantees": [
+    "Calls main.run(); never re-implements the pipeline.",
+    "Reads Decision.diagnostics.capacity.min_balance for calibration.",
+    "expected_min = amount_safe_to_pay + minimum_balance_to_keep only where amount_safe_to_pay < requested_amount; otherwise capped=true and delta null."
+  ],
+  "forbidden": [
+    "feeding sample answers into any pipeline module"
+  ]
+}

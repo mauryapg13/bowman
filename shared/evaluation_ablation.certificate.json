@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/evaluation_ablation",
+  "title": "Certificate: code/evaluation/ablation.py",
+  "module": "code/evaluation/ablation.py",
+  "stage": "V1-7",
+  "spec": [
+    "V1.md V1-7"
+  ],
+  "signature": "ablate() -> list[tuple[RunConfig, ScoreReport]] ; CLI prints the table",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "configs"
+    ],
+    "properties": {
+      "configs": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/RunConfig"
+        },
+        "description": "MVP core; +links; +vision; +ops; +spending_changes; full; plus reapply_settled_past as a negative control"
+      }
+    }
+  },
+  "output": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "config",
+        "per_column",
+        "calibration_mean_abs_delta"
+      ],
+      "properties": {
+        "config": {
+          "$ref": "types.schema.json#/$defs/RunConfig"
+        },
+        "per_column": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "calibration_mean_abs_delta": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "guarantees": [
+    "Each row is one main.run() with that config over the 25 samples, scored by score.score().",
+    "The negative control (reapply_settled_past) must score worse on calibration; the run fails loudly if it does not."
+  ],
+  "forbidden": [
+    "writing output.csv"
+  ]
+}

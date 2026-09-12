@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/format",
+  "title": "Certificate: code/format.py",
+  "module": "code/format.py",
+  "stage": "MVP M7",
+  "spec": [
+    "project_spec.md §2 formats",
+    "N1",
+    "MVP.md M7"
+  ],
+  "signature": "render(request, profile, chosen, status, capacity) -> OutputRow",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "request",
+      "profile",
+      "chosen",
+      "status",
+      "capacity"
+    ],
+    "properties": {
+      "request": {
+        "$ref": "types.schema.json#/$defs/Request"
+      },
+      "profile": {
+        "$ref": "types.schema.json#/$defs/Profile"
+      },
+      "chosen": {
+        "oneOf": [
+          {
+            "$ref": "types.schema.json#/$defs/Candidate"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "status": {
+        "$ref": "types.schema.json#/$defs/AffordabilityStatus"
+      },
+      "capacity": {
+        "$ref": "types.schema.json#/$defs/Capacity"
+      }
+    }
+  },
+  "output": {
+    "$ref": "types.schema.json#/$defs/OutputRow"
+  },
+  "guarantees": [
+    "amount_safe_to_pay, payment_plan amounts: plain numbers, no grouping, no trailing '.0'.",
+    "earliest_date_for_full_payment: capacity.earliest_full_date or '' ; equals request_date when status is affordable_now.",
+    "spending_changes_needed: 'none' or joined 'stop:<id>' / 'reduce_to:<id>:<amt>' in the candidate's order.",
+    "decision_explanation: one fixed template per outcome derived from all 25 samples; currency code + comma-grouped thousands; decimals only when non-zero; dates as '8 August 2025'; cites minimum_balance_to_keep verbatim.",
+    "No model call, ever."
+  ],
+  "forbidden": [
+    "generating free text",
+    "reading diagnostics"
+  ]
+}

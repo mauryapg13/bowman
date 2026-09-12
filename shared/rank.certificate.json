@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/rank",
+  "title": "Certificate: code/rank.py",
+  "module": "code/rank.py",
+  "stage": "MVP M6",
+  "spec": [
+    "project_spec.md §5 filters, sort key, status derivation"
+  ],
+  "signature": "choose(candidates, profile, request, capacity) -> tuple[Candidate | None, AffordabilityStatus]",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "candidates",
+      "profile",
+      "request",
+      "capacity"
+    ],
+    "properties": {
+      "candidates": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Candidate"
+        }
+      },
+      "profile": {
+        "$ref": "types.schema.json#/$defs/Profile"
+      },
+      "request": {
+        "$ref": "types.schema.json#/$defs/Request"
+      },
+      "capacity": {
+        "$ref": "types.schema.json#/$defs/Capacity"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "chosen",
+      "status"
+    ],
+    "properties": {
+      "chosen": {
+        "oneOf": [
+          {
+            "$ref": "types.schema.json#/$defs/Candidate"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "status": {
+        "$ref": "types.schema.json#/$defs/AffordabilityStatus"
+      }
+    }
+  },
+  "guarantees": [
+    "Filter 1: method in payment_methods_user_will_consider; wait requires full_payment accepted; not_recommended always eligible.",
+    "Filter 2: installments require number_of_payments*payment_frequency_days/30 <= max_installment_months; None => rejected.",
+    "Filter 3: safe == true.",
+    "sorted(survivors, key=sort_key)[0]; empty => (None, not_affordable).",
+    "Status: full_payment day 0 with no changes => affordable_now; installments/partial/any-with-changes => affordable_with_plan; wait => affordable_later.",
+    "Deterministic: sort_key is a total order (option_id or '' as final tie-break)."
+  ],
+  "forbidden": [
+    "recomputing safety",
+    "reading messages/images",
+    "keying on request_id/user_id"
+  ]
+}

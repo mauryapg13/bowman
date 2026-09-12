@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/ports_vision",
+  "title": "Certificate: code/ports/vision.py",
+  "module": "code/ports/vision.py",
+  "stage": "V1-2",
+  "spec": [
+    "project_spec.md §8 P1 P4 P6 P7 P8"
+  ],
+  "signature": "VisionPort.extract(image: ImageRef, event: RawEvent) -> VisionResult",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "image",
+      "event"
+    ],
+    "properties": {
+      "image": {
+        "$ref": "types.schema.json#/$defs/ImageRef"
+      },
+      "event": {
+        "$ref": "types.schema.json#/$defs/RawEvent",
+        "description": "only description, category, event_type and currency are sent to the backend"
+      }
+    }
+  },
+  "output": {
+    "$ref": "types.schema.json#/$defs/VisionResult"
+  },
+  "guarantees": [
+    "Backends: llm (API key present), ocr (offline), table (reviewed transcription data file with provenance + regeneration script). Same signature, same schema, same cache.",
+    "cache_key = sha256(image bytes || description || prompt_version); cache hit => no backend call.",
+    "Backend output is schema-checked; a non-conforming response raises VisionError (caught by amounts.py).",
+    "amount is parsed by code from amount_raw; the model never does arithmetic.",
+    "Every call appends a UsageRecord line (tokens, model) for usage_report.md."
+  ],
+  "forbidden": [
+    "seeing the request, profile or balance",
+    "returning more than one amount",
+    "branching on image_id"
+  ]
+}

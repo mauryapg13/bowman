@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/load",
+  "title": "Certificate: code/load.py",
+  "module": "code/load.py",
+  "stage": "MVP M1",
+  "spec": [
+    "project_spec.md §4.6",
+    "§7",
+    "§3 snapshot fact",
+    "MVP.md M1"
+  ],
+  "signature": "load(dataset_dir: Path) -> Dataset",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "dataset_dir"
+    ],
+    "properties": {
+      "dataset_dir": {
+        "type": "string",
+        "description": "directory containing the nine CSVs and media/images/"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "profiles",
+      "events_by_user",
+      "requests",
+      "sample_requests",
+      "options_by_request",
+      "messages_by_user",
+      "images_by_event",
+      "fx"
+    ],
+    "properties": {
+      "profiles": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "types.schema.json#/$defs/Profile"
+        },
+        "description": "keyed by user_id; 275"
+      },
+      "events_by_user": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "types.schema.json#/$defs/RawEvent"
+          }
+        },
+        "description": "keyed by user_id, each list sorted by (event_date, event_id)"
+      },
+      "requests": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Request"
+        },
+        "description": "dataset/requests.csv in file order; 250"
+      },
+      "sample_requests": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Request"
+        },
+        "description": "25; the answer columns are exposed separately to score.py only"
+      },
+      "options_by_request": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "types.schema.json#/$defs/PaymentOption"
+          }
+        },
+        "description": "each list sorted by payment_option_id"
+      },
+      "messages_by_user": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "types.schema.json#/$defs/Message"
+          }
+        }
+      },
+      "images_by_event": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "types.schema.json#/$defs/ImageRef"
+        }
+      },
+      "fx": {
+        "type": "object",
+        "description": "key 'YYYY-MM-DD|FROM|TO' -> rate",
+        "additionalProperties": {
+          "type": "number"
+        }
+      }
+    }
+  },
+  "guarantees": [
+    "Every column name comes from docs/dataset_notes.md §1 COL block.",
+    "RawEvent.amount is home currency; converted with the (settlement_date, currency, home_currency) rate row; a missing rate raises FxRateMissing.",
+    "RawEvent.amount is None (never 0.0) for exactly the rows whose CSV cell is blank.",
+    "Snapshot assertion: no settled event has event_date > its user's request_date; violation raises SnapshotViolation.",
+    "Calls no port, needs no API key, no OCR, no network."
+  ],
+  "forbidden": [
+    "reading organizer files",
+    "reading sample answer columns into the pipeline path",
+    "importing ports.*"
+  ]
+}

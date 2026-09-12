@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/ports_ops",
+  "title": "Certificate: code/ports/ops.py",
+  "module": "code/ports/ops.py",
+  "stage": "V1-3",
+  "spec": [
+    "project_spec.md §8 P1 P2 P3 P5 P7",
+    "N5"
+  ],
+  "signature": "OpsPort.operations(message: Message, allow_list: AllowList) -> list[Operation]",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "message",
+      "allow_list"
+    ],
+    "properties": {
+      "message": {
+        "$ref": "types.schema.json#/$defs/Message"
+      },
+      "allow_list": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "event_ids",
+          "streams"
+        ],
+        "properties": {
+          "event_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "types.schema.json#/$defs/EventId"
+            }
+          },
+          "streams": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "stream_id",
+                "category",
+                "description",
+                "direction",
+                "amount",
+                "cadence_days"
+              ],
+              "properties": {
+                "stream_id": {
+                  "$ref": "types.schema.json#/$defs/StreamId"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "direction": {
+                  "type": "string"
+                },
+                "amount": {
+                  "$ref": "types.schema.json#/$defs/Money"
+                },
+                "cadence_days": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "output": {
+    "type": "array",
+    "items": {
+      "$ref": "types.schema.json#/$defs/Operation"
+    },
+    "description": "zero or more; usually one; message_86 may yield two"
+  },
+  "guarantees": [
+    "Closed enum; op outside it => none. target_id outside allow_list => whole operation becomes none.",
+    "No translation stage; Indonesian text sent as-is; schema output is English/enum.",
+    "cache_key = sha256(message_text || sorted allow_list ids || prompt_version).",
+    "Never returns an operation that creates an event or stream.",
+    "Every call appends a UsageRecord line."
+  ],
+  "forbidden": [
+    "keyword blocklists",
+    "seeing profile balance/floor or the request",
+    "returning amounts that are not in the message text"
+  ]
+}

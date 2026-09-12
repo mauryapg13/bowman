@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/links",
+  "title": "Certificate: code/links.py",
+  "module": "code/links.py",
+  "stage": "V1-1",
+  "spec": [
+    "project_spec.md §4.4",
+    "§4.5"
+  ],
+  "signature": "resolve_links(events: list[Event]) -> tuple[list[Event], list[LinkResolution]]",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "events"
+    ],
+    "properties": {
+      "events": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Event"
+        }
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "events",
+      "resolutions"
+    ],
+    "properties": {
+      "events": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Event"
+        }
+      },
+      "resolutions": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/LinkResolution"
+        }
+      }
+    }
+  },
+  "guarantees": [
+    "Lookup over the seven observed (parent, child) patterns; depth 1, no traversal.",
+    "duplicate_charge: child (expense.pending) excluded with reason duplicate_charge; refund_pending: child stays excluded (pending_credit); authorization_then_purchase: parent already excluded (cancelled); failed_then_retry: parent already excluded (failed); valuation: child already excluded; refund_settled and investment_sale: both stay included.",
+    "Unknown pattern -> effect precedence_ladder, event marked with reason precedence_rule_4 only if the ladder excludes it; never silently dropped.",
+    "Every resolution appended to both events' provenance."
+  ],
+  "forbidden": [
+    "changing amounts",
+    "creating events"
+  ]
+}

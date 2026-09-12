@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/amounts",
+  "title": "Certificate: code/amounts.py",
+  "module": "code/amounts.py",
+  "stage": "V1-2 (pass-through in MVP)",
+  "spec": [
+    "project_spec.md §4.6",
+    "§7",
+    "§8 P4 P6"
+  ],
+  "signature": "resolve_amounts(events: list[RawEvent], images_by_event, fx, vision: VisionPort | None) -> list[RawEvent]",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "events",
+      "images_by_event",
+      "fx",
+      "vision"
+    ],
+    "properties": {
+      "events": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/RawEvent"
+        }
+      },
+      "images_by_event": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "types.schema.json#/$defs/ImageRef"
+        }
+      },
+      "fx": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "number"
+        }
+      },
+      "vision": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "description": "None in MVP → events returned unchanged"
+      }
+    }
+  },
+  "output": {
+    "type": "array",
+    "items": {
+      "$ref": "types.schema.json#/$defs/RawEvent"
+    }
+  },
+  "guarantees": [
+    "Only events with amount None and a linked image are touched.",
+    "amount_original = VisionResult.amount (image currency); amount = converted with the settlement-date rate row.",
+    "Indian lakh grouping parsed by code: '1,00,000.00' -> 100000.0.",
+    "Returns new RawEvent instances; input list is not mutated.",
+    "If the port fails for an event, amount stays None and the event is later excluded as amount_unknown (fail gracefully at the edge)."
+  ],
+  "forbidden": [
+    "adding the amount to any balance",
+    "recomputing totals from line items",
+    "branching on event_id/image_id"
+  ]
+}

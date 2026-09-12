@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/spending",
+  "title": "Certificate: code/spending.py",
+  "module": "code/spending.py",
+  "stage": "V1-4",
+  "spec": [
+    "project_spec.md §6"
+  ],
+  "signature": "eligible_changes(streams, profile) -> list[SpendingChange] ; apply(streams, changes) -> list[Stream]",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "streams",
+      "profile",
+      "changes"
+    ],
+    "properties": {
+      "streams": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Stream"
+        }
+      },
+      "profile": {
+        "$ref": "types.schema.json#/$defs/Profile"
+      },
+      "changes": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/SpendingChange"
+        }
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "eligible",
+      "streams"
+    ],
+    "properties": {
+      "eligible": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/SpendingChange"
+        },
+        "description": "sorted by event_id"
+      },
+      "streams": {
+        "type": "array",
+        "items": {
+          "$ref": "types.schema.json#/$defs/Stream"
+        },
+        "description": "new instances with amount reduced or ended from day 0"
+      }
+    }
+  },
+  "guarantees": [
+    "stop eligible iff flexibility in {stoppable, reducible_or_stoppable} and category in willing_to_stop and category not in protect.",
+    "reduce_to eligible iff flexibility in {reducible, reducible_or_stoppable} and category in willing_to_reduce and category not in protect; new_amount = minimum_allowed_amount.",
+    "A stream yields at most one change per action; stop and reduce_to never target the same stream in one candidate.",
+    "apply returns copies; inputs untouched."
+  ],
+  "forbidden": [
+    "changing credit streams",
+    "changing fixed streams",
+    "inventing a new_amount"
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bowman/certificates/main",
+  "title": "Certificate: code/main.py",
+  "module": "code/main.py",
+  "stage": "MVP",
+  "spec": [
+    "project_spec.md §7",
+    "§10"
+  ],
+  "signature": "run(dataset_dir: Path, requests: list[Request] | None = None, config: RunConfig = MVP) -> list[Decision] ; CLI: python3 code/main.py",
+  "input": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "dataset_dir",
+      "requests",
+      "config"
+    ],
+    "properties": {
+      "dataset_dir": {
+        "type": "string"
+      },
+      "requests": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "types.schema.json#/$defs/Request"
+        },
+        "description": "None => dataset/requests.csv; score.py passes the 25 samples"
+      },
+      "config": {
+        "$ref": "types.schema.json#/$defs/RunConfig"
+      }
+    }
+  },
+  "output": {
+    "type": "array",
+    "items": {
+      "$ref": "types.schema.json#/$defs/Decision"
+    }
+  },
+  "guarantees": [
+    "Composes the modules in order: load -> amounts -> inclusion -> links -> recurrence -> amend -> ledger -> plans -> rank -> format; write is called only by the CLI.",
+    "Ports are constructed here from environment variables and injected; run() never reads os.environ elsewhere.",
+    "score.py and ablation.py call run(); they never re-implement the pipeline.",
+    "Two calls with the same inputs and cache return equal Decisions."
+  ],
+  "forbidden": [
+    "business rules in main.py",
+    "hardcoded request_id/user_id branches"
+  ]
+}
