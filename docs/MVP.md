@@ -39,7 +39,8 @@ user's `request_date`. Fail loudly if the hidden data breaks it.
 `load.py` calls no port. `code/amounts.py` exists as a pass-through in MVP.
 
 **Done when:** all nine files load; 25,342 events parsed; exactly 16 with
-`amount is None`; 140 converted; zero FX failures; the snapshot assertion
+`amount is None`; 139 converted at load (the 140th foreign row, `event_7307`, is
+blank and converts in `amounts.py`); zero FX failures; the snapshot assertion
 passes.
 
 ## M2 — `code/inclusion.py`
