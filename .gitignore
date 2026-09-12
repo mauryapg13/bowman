@@ -1,0 +1,20 @@
+# chat transcript — uploaded separately at submission, never committed (AGENTS.md §2)
+log.txt
+
+# secrets
+.env
+.env.*
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# submission bundle
+code.zip
+
+# editors / OS
+.DS_Store
+.vscode/
+.idea/
