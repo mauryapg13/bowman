@@ -5,6 +5,7 @@
   "module": "code/amend.py",
   "stage": "V1-3 (pass-through in MVP)",
   "spec": [
+    "AGENTS.md §6.1 exchange_rates rule",
     "project_spec.md §8 P2 P3",
     "V1.md V1-3"
   ],
@@ -96,7 +97,7 @@
   "guarantees": [
     "Allow-list handed to the port = this user's event_ids + stream_ids; any target outside it => op none.",
     "amend_stream appends an Amendment to a COPY of the stream; cancel on a one-off removes it from the returned oneoffs list; delay moves a one-off's date; amend_amount changes a one-off's amount; confirm and none change nothing.",
-    "Amounts in the message's currency are converted with the rate row on effective_date (or request_date if none).",
+    "FX (AGENTS.md §6.1): a quoted foreign amount is converted with the rate row for the occurrence's settlement date — effective_date for a confirmed one-off, each occurrence date for a stream; if no row exists on that date, the latest row on or before it is used and recorded as rate_date_used. The port never converts.",
     "Never creates a new Stream or OneOff.",
     "Runs after recurrence and before ledger."
   ],

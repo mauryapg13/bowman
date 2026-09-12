@@ -73,3 +73,14 @@ def test_blank_max_installment_months_means_no_installments():
     for p in rows("financial_profiles.csv"):
         lists = "installments" in p["payment_methods_user_will_consider"].split("|")
         assert lists == (p["max_installment_months"] != "")
+
+
+def test_exchange_rates_are_constant_per_pair():
+    """spec §4.6: the latest-on-or-before fallback for undated predicted
+    occurrences is numerically neutral only while this holds."""
+    seen = {}
+    for r in rows("exchange_rates.csv"):
+        pair = (r["from_currency"], r["to_currency"])
+        seen.setdefault(pair, set()).add(r["rate"])
+    assert all(len(v) == 1 for v in seen.values()), seen
+    assert set(seen) == {("USD", "INR"), ("USD", "IDR"), ("USD", "EUR"), ("EUR", "USD"), ("EUR", "ZAR")}

@@ -4,378 +4,1455 @@
   "title": "BOWman shared record types",
   "description": "Single source of truth for every record that crosses a module boundary. Dates are ISO YYYY-MM-DD strings in JSON (datetime.date in Python). Money is a float in the user's home currency unless a `currency` field says otherwise. Column names come from docs/dataset_notes.md §1.",
   "$defs": {
-    "Date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
-    "Money": { "type": "number", "minimum": 0 },
-    "Currency": { "type": "string", "enum": ["INR", "EUR", "IDR", "ZAR", "USD"] },
-    "UserId": { "type": "string", "pattern": "^user_\\d+$" },
-    "RequestId": { "type": "string", "pattern": "^request_\\d+$" },
-    "EventId": { "type": "string", "pattern": "^event_\\d+$" },
-    "OptionId": { "type": "string", "pattern": "^payment_option_\\d+$" },
-    "MessageId": { "type": "string", "pattern": "^message_\\d+$" },
-    "ImageId": { "type": "string", "pattern": "^image_\\d+$" },
-    "StreamId": { "type": "string", "pattern": "^stream_user_\\d+_\\d+$", "description": "stable per user: stream_<user_id>_<ordinal>, ordinal assigned in sorted (direction, category, description) order" },
-    "Direction": { "type": "string", "enum": ["debit", "credit", "non_cash"] },
-    "EventType": { "type": "string", "enum": ["expense", "subscription", "income", "debt_payment", "investment_purchase", "refund", "investment_valuation", "investment_sale"] },
-    "Status": { "type": "string", "enum": ["settled", "pending", "scheduled", "cancelled", "failed", "unrealized"] },
-    "Flexibility": { "type": "string", "enum": ["fixed", "reducible", "stoppable", "reducible_or_stoppable"] },
-    "PaymentMethod": { "type": "string", "enum": ["full_payment", "partial_payment", "installments", "wait", "not_recommended"] },
-    "OptionMethod": { "type": "string", "enum": ["full_payment", "installments"] },
-    "AffordabilityStatus": { "type": "string", "enum": ["affordable_now", "affordable_with_plan", "affordable_later", "not_affordable"] },
-    "ExclusionReason": { "type": "string", "enum": ["pending_credit", "cancelled", "failed", "non_cash_unrealized", "amount_unknown", "duplicate_charge", "superseded_by_link", "precedence_rule_4"] },
-    "Op": { "type": "string", "enum": ["cancel", "amend_amount", "delay", "confirm", "amend_stream", "none"] },
-
+    "Date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "Money": {
+      "type": "number",
+      "minimum": 0
+    },
+    "Currency": {
+      "type": "string",
+      "enum": [
+        "INR",
+        "EUR",
+        "IDR",
+        "ZAR",
+        "USD"
+      ]
+    },
+    "UserId": {
+      "type": "string",
+      "pattern": "^user_\\d+$"
+    },
+    "RequestId": {
+      "type": "string",
+      "pattern": "^request_\\d+$"
+    },
+    "EventId": {
+      "type": "string",
+      "pattern": "^event_\\d+$"
+    },
+    "OptionId": {
+      "type": "string",
+      "pattern": "^payment_option_\\d+$"
+    },
+    "MessageId": {
+      "type": "string",
+      "pattern": "^message_\\d+$"
+    },
+    "ImageId": {
+      "type": "string",
+      "pattern": "^image_\\d+$"
+    },
+    "StreamId": {
+      "type": "string",
+      "pattern": "^stream_user_\\d+_\\d+$",
+      "description": "stable per user: stream_<user_id>_<ordinal>, ordinal assigned in sorted (direction, category, description) order"
+    },
+    "Direction": {
+      "type": "string",
+      "enum": [
+        "debit",
+        "credit",
+        "non_cash"
+      ]
+    },
+    "EventType": {
+      "type": "string",
+      "enum": [
+        "expense",
+        "subscription",
+        "income",
+        "debt_payment",
+        "investment_purchase",
+        "refund",
+        "investment_valuation",
+        "investment_sale"
+      ]
+    },
+    "Status": {
+      "type": "string",
+      "enum": [
+        "settled",
+        "pending",
+        "scheduled",
+        "cancelled",
+        "failed",
+        "unrealized"
+      ]
+    },
+    "Flexibility": {
+      "type": "string",
+      "enum": [
+        "fixed",
+        "reducible",
+        "stoppable",
+        "reducible_or_stoppable"
+      ]
+    },
+    "PaymentMethod": {
+      "type": "string",
+      "enum": [
+        "full_payment",
+        "partial_payment",
+        "installments",
+        "wait",
+        "not_recommended"
+      ]
+    },
+    "OptionMethod": {
+      "type": "string",
+      "enum": [
+        "full_payment",
+        "installments"
+      ]
+    },
+    "AffordabilityStatus": {
+      "type": "string",
+      "enum": [
+        "affordable_now",
+        "affordable_with_plan",
+        "affordable_later",
+        "not_affordable"
+      ]
+    },
+    "ExclusionReason": {
+      "type": "string",
+      "enum": [
+        "pending_credit",
+        "cancelled",
+        "failed",
+        "non_cash_unrealized",
+        "amount_unknown",
+        "duplicate_charge",
+        "superseded_by_link",
+        "precedence_rule_4"
+      ]
+    },
+    "Op": {
+      "type": "string",
+      "enum": [
+        "cancel",
+        "amend_amount",
+        "delay",
+        "confirm",
+        "amend_stream",
+        "none"
+      ]
+    },
     "Profile": {
-      "type": "object", "additionalProperties": false,
-      "required": ["user_id", "home_currency", "current_available_balance", "minimum_balance_to_keep", "financial_priorities", "expense_categories_to_protect", "expense_categories_user_is_willing_to_reduce", "expense_categories_user_is_willing_to_stop", "payment_methods_user_will_consider", "max_installment_months"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "user_id",
+        "home_currency",
+        "current_available_balance",
+        "minimum_balance_to_keep",
+        "financial_priorities",
+        "expense_categories_to_protect",
+        "expense_categories_user_is_willing_to_reduce",
+        "expense_categories_user_is_willing_to_stop",
+        "payment_methods_user_will_consider",
+        "max_installment_months"
+      ],
       "properties": {
-        "user_id": { "$ref": "#/$defs/UserId" },
-        "home_currency": { "$ref": "#/$defs/Currency" },
-        "current_available_balance": { "$ref": "#/$defs/Money" },
-        "minimum_balance_to_keep": { "$ref": "#/$defs/Money" },
-        "financial_priorities": { "type": "array", "items": { "type": "string" } },
-        "expense_categories_to_protect": { "type": "array", "items": { "type": "string" } },
-        "expense_categories_user_is_willing_to_reduce": { "type": "array", "items": { "type": "string" } },
-        "expense_categories_user_is_willing_to_stop": { "type": "array", "items": { "type": "string" } },
-        "payment_methods_user_will_consider": { "type": "array", "minItems": 1, "items": { "type": "string", "enum": ["full_payment", "partial_payment", "installments"] } },
-        "max_installment_months": { "type": ["integer", "null"], "minimum": 1 }
+        "user_id": {
+          "$ref": "#/$defs/UserId"
+        },
+        "home_currency": {
+          "$ref": "#/$defs/Currency"
+        },
+        "current_available_balance": {
+          "$ref": "#/$defs/Money"
+        },
+        "minimum_balance_to_keep": {
+          "$ref": "#/$defs/Money"
+        },
+        "financial_priorities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expense_categories_to_protect": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expense_categories_user_is_willing_to_reduce": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expense_categories_user_is_willing_to_stop": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "payment_methods_user_will_consider": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "full_payment",
+              "partial_payment",
+              "installments"
+            ]
+          }
+        },
+        "max_installment_months": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        }
       }
     },
-
     "RawEvent": {
       "description": "One row of financial_events.csv after load: typed, amount converted to home currency when present, None when the cell was blank.",
-      "type": "object", "additionalProperties": false,
-      "required": ["event_id", "user_id", "event_type", "description", "category", "direction", "amount", "amount_original", "currency", "event_date", "settlement_date", "status", "linked_event_id", "flexibility", "minimum_allowed_amount"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "user_id",
+        "event_type",
+        "description",
+        "category",
+        "direction",
+        "amount",
+        "amount_original",
+        "currency",
+        "event_date",
+        "settlement_date",
+        "status",
+        "linked_event_id",
+        "flexibility",
+        "minimum_allowed_amount"
+      ],
       "properties": {
-        "event_id": { "$ref": "#/$defs/EventId" },
-        "user_id": { "$ref": "#/$defs/UserId" },
-        "event_type": { "$ref": "#/$defs/EventType" },
-        "description": { "type": "string" },
-        "category": { "type": "string" },
-        "direction": { "$ref": "#/$defs/Direction" },
-        "amount": { "oneOf": [ { "$ref": "#/$defs/Money" }, { "type": "null" } ], "description": "home currency; null iff the CSV cell was blank and amounts.py has not filled it" },
-        "amount_original": { "oneOf": [ { "$ref": "#/$defs/Money" }, { "type": "null" } ], "description": "as written in the CSV (or read from the image), in `currency`" },
-        "currency": { "$ref": "#/$defs/Currency" },
-        "event_date": { "$ref": "#/$defs/Date" },
-        "settlement_date": { "oneOf": [ { "$ref": "#/$defs/Date" }, { "type": "null" } ] },
-        "status": { "$ref": "#/$defs/Status" },
-        "linked_event_id": { "oneOf": [ { "$ref": "#/$defs/EventId" }, { "type": "null" } ] },
-        "flexibility": { "$ref": "#/$defs/Flexibility" },
-        "minimum_allowed_amount": { "oneOf": [ { "$ref": "#/$defs/Money" }, { "type": "null" } ] }
+        "event_id": {
+          "$ref": "#/$defs/EventId"
+        },
+        "user_id": {
+          "$ref": "#/$defs/UserId"
+        },
+        "event_type": {
+          "$ref": "#/$defs/EventType"
+        },
+        "description": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "direction": {
+          "$ref": "#/$defs/Direction"
+        },
+        "amount": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "home currency; null iff the CSV cell was blank and amounts.py has not filled it"
+        },
+        "amount_original": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "as written in the CSV (or read from the image), in `currency`"
+        },
+        "currency": {
+          "$ref": "#/$defs/Currency"
+        },
+        "event_date": {
+          "$ref": "#/$defs/Date"
+        },
+        "settlement_date": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/Status"
+        },
+        "linked_event_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/EventId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "flexibility": {
+          "$ref": "#/$defs/Flexibility"
+        },
+        "minimum_allowed_amount": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
       }
     },
-
     "Event": {
       "description": "RawEvent after the inclusion gate and link resolution.",
-      "allOf": [ { "$ref": "#/$defs/RawEvent" } ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RawEvent"
+        }
+      ],
       "type": "object",
-      "required": ["included", "exclusion_reason", "provenance"],
+      "required": [
+        "included",
+        "exclusion_reason",
+        "provenance"
+      ],
       "properties": {
-        "included": { "type": "boolean" },
-        "exclusion_reason": { "oneOf": [ { "$ref": "#/$defs/ExclusionReason" }, { "type": "null" } ] },
-        "provenance": { "type": "array", "items": { "type": "string" }, "description": "rules that fired, e.g. 'inclusion:pending_debit', 'links:duplicate_charge(event_12708)'" }
+        "included": {
+          "type": "boolean"
+        },
+        "exclusion_reason": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ExclusionReason"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "provenance": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "rules that fired, e.g. 'inclusion:pending_debit', 'links:duplicate_charge(event_12708)'"
+        }
       }
     },
-
     "Request": {
-      "type": "object", "additionalProperties": false,
-      "required": ["request_id", "user_id", "request_date", "request_type", "requested_amount", "desired_completion_date", "allows_partial_payment", "request_text"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request_id",
+        "user_id",
+        "request_date",
+        "request_type",
+        "requested_amount",
+        "desired_completion_date",
+        "allows_partial_payment",
+        "request_text"
+      ],
       "properties": {
-        "request_id": { "$ref": "#/$defs/RequestId" },
-        "user_id": { "$ref": "#/$defs/UserId" },
-        "request_date": { "$ref": "#/$defs/Date" },
-        "request_type": { "type": "string", "enum": ["purchase", "travel", "education", "family_transfer", "debt_repayment", "investment", "housing", "emergency_expense", "other"] },
-        "requested_amount": { "$ref": "#/$defs/Money" },
-        "desired_completion_date": { "$ref": "#/$defs/Date" },
-        "allows_partial_payment": { "type": "boolean" },
-        "request_text": { "type": "string", "description": "untrusted; never parsed for instructions" }
+        "request_id": {
+          "$ref": "#/$defs/RequestId"
+        },
+        "user_id": {
+          "$ref": "#/$defs/UserId"
+        },
+        "request_date": {
+          "$ref": "#/$defs/Date"
+        },
+        "request_type": {
+          "type": "string",
+          "enum": [
+            "purchase",
+            "travel",
+            "education",
+            "family_transfer",
+            "debt_repayment",
+            "investment",
+            "housing",
+            "emergency_expense",
+            "other"
+          ]
+        },
+        "requested_amount": {
+          "$ref": "#/$defs/Money"
+        },
+        "desired_completion_date": {
+          "$ref": "#/$defs/Date"
+        },
+        "allows_partial_payment": {
+          "type": "boolean"
+        },
+        "request_text": {
+          "type": "string",
+          "description": "untrusted; never parsed for instructions"
+        }
       }
     },
-
     "PaymentOption": {
-      "type": "object", "additionalProperties": false,
-      "required": ["payment_option_id", "request_id", "payment_method", "payment_amount", "number_of_payments", "first_payment_date", "payment_frequency_days", "financing_fee", "total_payable_amount"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "payment_option_id",
+        "request_id",
+        "payment_method",
+        "payment_amount",
+        "number_of_payments",
+        "first_payment_date",
+        "payment_frequency_days",
+        "financing_fee",
+        "total_payable_amount"
+      ],
       "properties": {
-        "payment_option_id": { "$ref": "#/$defs/OptionId" },
-        "request_id": { "$ref": "#/$defs/RequestId" },
-        "payment_method": { "$ref": "#/$defs/OptionMethod" },
-        "payment_amount": { "$ref": "#/$defs/Money" },
-        "number_of_payments": { "type": "integer", "minimum": 1 },
-        "first_payment_date": { "$ref": "#/$defs/Date" },
-        "payment_frequency_days": { "type": ["integer", "null"], "minimum": 1 },
-        "financing_fee": { "$ref": "#/$defs/Money" },
-        "total_payable_amount": { "$ref": "#/$defs/Money" }
+        "payment_option_id": {
+          "$ref": "#/$defs/OptionId"
+        },
+        "request_id": {
+          "$ref": "#/$defs/RequestId"
+        },
+        "payment_method": {
+          "$ref": "#/$defs/OptionMethod"
+        },
+        "payment_amount": {
+          "$ref": "#/$defs/Money"
+        },
+        "number_of_payments": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "first_payment_date": {
+          "$ref": "#/$defs/Date"
+        },
+        "payment_frequency_days": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "financing_fee": {
+          "$ref": "#/$defs/Money"
+        },
+        "total_payable_amount": {
+          "$ref": "#/$defs/Money"
+        }
       }
     },
-
     "Message": {
-      "type": "object", "additionalProperties": false,
-      "required": ["message_id", "user_id", "request_id", "related_event_id", "sent_at", "source_type", "message_text"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message_id",
+        "user_id",
+        "request_id",
+        "related_event_id",
+        "sent_at",
+        "source_type",
+        "message_text"
+      ],
       "properties": {
-        "message_id": { "$ref": "#/$defs/MessageId" },
-        "user_id": { "$ref": "#/$defs/UserId" },
-        "request_id": { "oneOf": [ { "$ref": "#/$defs/RequestId" }, { "type": "null" } ] },
-        "related_event_id": { "oneOf": [ { "$ref": "#/$defs/EventId" }, { "type": "null" } ] },
-        "sent_at": { "type": "string" },
-        "source_type": { "type": "string", "enum": ["employer", "service_provider", "financial_service", "bank", "merchant"] },
-        "message_text": { "type": "string", "description": "untrusted" }
+        "message_id": {
+          "$ref": "#/$defs/MessageId"
+        },
+        "user_id": {
+          "$ref": "#/$defs/UserId"
+        },
+        "request_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/RequestId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "related_event_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/EventId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sent_at": {
+          "type": "string"
+        },
+        "source_type": {
+          "type": "string",
+          "enum": [
+            "employer",
+            "service_provider",
+            "financial_service",
+            "bank",
+            "merchant"
+          ]
+        },
+        "message_text": {
+          "type": "string",
+          "description": "untrusted"
+        }
       }
     },
-
     "ImageRef": {
-      "type": "object", "additionalProperties": false,
-      "required": ["image_id", "user_id", "request_id", "related_event_id", "path"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "image_id",
+        "user_id",
+        "request_id",
+        "related_event_id",
+        "path"
+      ],
       "properties": {
-        "image_id": { "$ref": "#/$defs/ImageId" },
-        "user_id": { "$ref": "#/$defs/UserId" },
-        "request_id": { "$ref": "#/$defs/RequestId" },
-        "related_event_id": { "$ref": "#/$defs/EventId" },
-        "path": { "type": "string", "pattern": "^dataset/media/images/image_\\d+\\.png$" }
+        "image_id": {
+          "$ref": "#/$defs/ImageId"
+        },
+        "user_id": {
+          "$ref": "#/$defs/UserId"
+        },
+        "request_id": {
+          "$ref": "#/$defs/RequestId"
+        },
+        "related_event_id": {
+          "$ref": "#/$defs/EventId"
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^dataset/media/images/image_\\d+\\.png$"
+        }
       }
     },
-
     "Amendment": {
-      "description": "A validated change to a stream, produced by ports/ops via amend.py. Effective from `effective_date`; `ended` stops all occurrences on/after it.",
-      "type": "object", "additionalProperties": false,
-      "required": ["effective_date", "new_amount", "ended", "source_message_id", "op"],
+      "description": "A validated change to a stream, produced by ports/ops via amend.py. Effective from `effective_date`; `ended` stops all occurrences on/after it. new_amount is HOME currency, converted by amend.py from new_amount_original/currency using the settlement-date rate row (AGENTS.md §6.1); the model never converts.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effective_date",
+        "new_amount",
+        "new_amount_original",
+        "currency",
+        "rate_date_used",
+        "ended",
+        "source_message_id",
+        "op"
+      ],
       "properties": {
-        "effective_date": { "$ref": "#/$defs/Date" },
-        "new_amount": { "oneOf": [ { "$ref": "#/$defs/Money" }, { "type": "null" } ] },
-        "ended": { "type": "boolean" },
-        "one_occurrence_only": { "type": "boolean", "default": false, "description": "true for 'next salary is reduced' style messages" },
-        "source_message_id": { "$ref": "#/$defs/MessageId" },
-        "op": { "$ref": "#/$defs/Op" }
+        "effective_date": {
+          "$ref": "#/$defs/Date"
+        },
+        "new_amount": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ended": {
+          "type": "boolean"
+        },
+        "one_occurrence_only": {
+          "type": "boolean",
+          "default": false,
+          "description": "true for 'next salary is reduced' style messages"
+        },
+        "source_message_id": {
+          "$ref": "#/$defs/MessageId"
+        },
+        "op": {
+          "$ref": "#/$defs/Op"
+        },
+        "new_amount_original": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "as quoted in the message"
+        },
+        "currency": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Currency"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "currency quoted in the message; null when none was quoted (then home currency assumed)"
+        },
+        "rate_date_used": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Date"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "rate row actually used; null when no conversion was needed"
+        }
       }
     },
-
     "Stream": {
       "description": "A detected recurring series. FROZEN: modules return new instances, never mutate.",
-      "type": "object", "additionalProperties": false,
-      "required": ["stream_id", "user_id", "direction", "category", "description", "cadence_days", "amount", "anchor", "occurrences", "flexibility", "minimum_allowed_amount", "latest_event_id", "amendments", "provenance"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stream_id",
+        "user_id",
+        "direction",
+        "category",
+        "description",
+        "cadence_days",
+        "amount",
+        "anchor",
+        "occurrences",
+        "flexibility",
+        "minimum_allowed_amount",
+        "latest_event_id",
+        "amendments",
+        "provenance"
+      ],
       "properties": {
-        "stream_id": { "$ref": "#/$defs/StreamId" },
-        "user_id": { "$ref": "#/$defs/UserId" },
-        "direction": { "type": "string", "enum": ["debit", "credit"] },
-        "category": { "type": "string" },
-        "description": { "type": ["string", "null"], "description": "null for category-level streams (groceries, transport, dining)" },
-        "cadence_days": { "type": "integer", "minimum": 5, "maximum": 35 },
-        "amount": { "$ref": "#/$defs/Money", "description": "median of occurrences, home currency" },
-        "anchor": { "$ref": "#/$defs/Date", "description": "latest recorded occurrence" },
-        "occurrences": { "type": "array", "minItems": 3, "items": { "type": "object", "required": ["event_id", "date", "amount"], "properties": { "event_id": { "$ref": "#/$defs/EventId" }, "date": { "$ref": "#/$defs/Date" }, "amount": { "$ref": "#/$defs/Money" } } } },
-        "flexibility": { "$ref": "#/$defs/Flexibility" },
-        "minimum_allowed_amount": { "oneOf": [ { "$ref": "#/$defs/Money" }, { "type": "null" } ] },
-        "latest_event_id": { "$ref": "#/$defs/EventId", "description": "the id written to spending_changes_needed" },
-        "amendments": { "type": "array", "items": { "$ref": "#/$defs/Amendment" } },
-        "provenance": { "type": "array", "items": { "type": "string" } }
+        "stream_id": {
+          "$ref": "#/$defs/StreamId"
+        },
+        "user_id": {
+          "$ref": "#/$defs/UserId"
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "debit",
+            "credit"
+          ]
+        },
+        "category": {
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "null for category-level streams (groceries, transport, dining)"
+        },
+        "cadence_days": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 35
+        },
+        "amount": {
+          "$ref": "#/$defs/Money",
+          "description": "median of occurrences, home currency"
+        },
+        "anchor": {
+          "$ref": "#/$defs/Date",
+          "description": "latest recorded occurrence"
+        },
+        "occurrences": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "required": [
+              "event_id",
+              "date",
+              "amount"
+            ],
+            "properties": {
+              "event_id": {
+                "$ref": "#/$defs/EventId"
+              },
+              "date": {
+                "$ref": "#/$defs/Date"
+              },
+              "amount": {
+                "$ref": "#/$defs/Money"
+              }
+            }
+          }
+        },
+        "flexibility": {
+          "$ref": "#/$defs/Flexibility"
+        },
+        "minimum_allowed_amount": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "latest_event_id": {
+          "$ref": "#/$defs/EventId",
+          "description": "the id written to spending_changes_needed"
+        },
+        "amendments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Amendment"
+          }
+        },
+        "provenance": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
-
     "OneOff": {
       "description": "An included event that belongs to no stream. Lands on `date` (= settlement_date).",
-      "type": "object", "additionalProperties": false,
-      "required": ["event_id", "user_id", "direction", "amount", "date", "category", "status"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "user_id",
+        "direction",
+        "amount",
+        "date",
+        "category",
+        "status"
+      ],
       "properties": {
-        "event_id": { "$ref": "#/$defs/EventId" },
-        "user_id": { "$ref": "#/$defs/UserId" },
-        "direction": { "type": "string", "enum": ["debit", "credit"] },
-        "amount": { "$ref": "#/$defs/Money" },
-        "date": { "$ref": "#/$defs/Date" },
-        "category": { "type": "string" },
-        "status": { "$ref": "#/$defs/Status" }
+        "event_id": {
+          "$ref": "#/$defs/EventId"
+        },
+        "user_id": {
+          "$ref": "#/$defs/UserId"
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "debit",
+            "credit"
+          ]
+        },
+        "amount": {
+          "$ref": "#/$defs/Money"
+        },
+        "date": {
+          "$ref": "#/$defs/Date"
+        },
+        "category": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/Status"
+        }
       }
     },
-
     "Placement": {
       "description": "One cash movement placed on a window day. `kind` says where it came from; the merge rule (spec §4.1) forbids recorded+predicted on the same day for the same stream.",
-      "type": "object", "additionalProperties": false,
-      "required": ["day", "amount", "direction", "source_id", "kind"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "day",
+        "amount",
+        "direction",
+        "source_id",
+        "kind"
+      ],
       "properties": {
-        "day": { "type": "integer", "minimum": 0, "maximum": 90 },
-        "amount": { "$ref": "#/$defs/Money" },
-        "direction": { "type": "string", "enum": ["debit", "credit"] },
-        "source_id": { "type": "string", "description": "event_id or stream_id" },
-        "kind": { "type": "string", "enum": ["recorded", "predicted", "oneoff"] }
+        "day": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 90
+        },
+        "amount": {
+          "$ref": "#/$defs/Money"
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "debit",
+            "credit"
+          ]
+        },
+        "source_id": {
+          "type": "string",
+          "description": "event_id or stream_id"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "recorded",
+            "predicted",
+            "oneoff"
+          ]
+        }
       }
     },
-
     "Ledger": {
-      "type": "object", "additionalProperties": false,
-      "required": ["user_id", "start", "opening", "floor", "balance", "suffix_min", "placements"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "user_id",
+        "start",
+        "opening",
+        "floor",
+        "balance",
+        "suffix_min",
+        "placements"
+      ],
       "properties": {
-        "user_id": { "$ref": "#/$defs/UserId" },
-        "start": { "$ref": "#/$defs/Date", "description": "day 0 = request_date" },
-        "opening": { "$ref": "#/$defs/Money" },
-        "floor": { "$ref": "#/$defs/Money" },
-        "balance": { "type": "array", "minItems": 91, "maxItems": 91, "items": { "type": "number" } },
-        "suffix_min": { "type": "array", "minItems": 91, "maxItems": 91, "items": { "type": "number" }, "description": "suffix_min[d] = min(balance[d:]); non-decreasing" },
-        "placements": { "type": "array", "items": { "$ref": "#/$defs/Placement" } }
+        "user_id": {
+          "$ref": "#/$defs/UserId"
+        },
+        "start": {
+          "$ref": "#/$defs/Date",
+          "description": "day 0 = request_date"
+        },
+        "opening": {
+          "$ref": "#/$defs/Money"
+        },
+        "floor": {
+          "$ref": "#/$defs/Money"
+        },
+        "balance": {
+          "type": "array",
+          "minItems": 91,
+          "maxItems": 91,
+          "items": {
+            "type": "number"
+          }
+        },
+        "suffix_min": {
+          "type": "array",
+          "minItems": 91,
+          "maxItems": 91,
+          "items": {
+            "type": "number"
+          },
+          "description": "suffix_min[d] = min(balance[d:]); non-decreasing"
+        },
+        "placements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Placement"
+          }
+        }
       }
     },
-
     "Capacity": {
       "description": "spec §3, computed from the ledger WITHOUT spending changes and WITHOUT looking at payment preferences.",
-      "type": "object", "additionalProperties": false,
-      "required": ["amount_safe_to_pay", "earliest_full_day", "earliest_full_date", "min_balance"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "amount_safe_to_pay",
+        "earliest_full_day",
+        "earliest_full_date",
+        "min_balance"
+      ],
       "properties": {
-        "amount_safe_to_pay": { "$ref": "#/$defs/Money" },
-        "earliest_full_day": { "type": ["integer", "null"], "minimum": 0, "maximum": 90 },
-        "earliest_full_date": { "oneOf": [ { "$ref": "#/$defs/Date" }, { "type": "null" } ] },
-        "min_balance": { "type": "number", "description": "= suffix_min[0]; compared to the sample's amount_safe_to_pay + minimum_balance_to_keep in calibration" }
+        "amount_safe_to_pay": {
+          "$ref": "#/$defs/Money"
+        },
+        "earliest_full_day": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 90
+        },
+        "earliest_full_date": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "min_balance": {
+          "type": "number",
+          "description": "= suffix_min[0]; compared to the sample's amount_safe_to_pay + minimum_balance_to_keep in calibration"
+        }
       }
     },
-
     "SpendingChange": {
-      "type": "object", "additionalProperties": false,
-      "required": ["action", "event_id", "stream_id", "new_amount"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "event_id",
+        "stream_id",
+        "new_amount"
+      ],
       "properties": {
-        "action": { "type": "string", "enum": ["stop", "reduce_to"] },
-        "event_id": { "$ref": "#/$defs/EventId", "description": "= stream.latest_event_id" },
-        "stream_id": { "$ref": "#/$defs/StreamId" },
-        "new_amount": { "oneOf": [ { "$ref": "#/$defs/Money" }, { "type": "null" } ], "description": "= minimum_allowed_amount for reduce_to; null for stop" }
+        "action": {
+          "type": "string",
+          "enum": [
+            "stop",
+            "reduce_to"
+          ]
+        },
+        "event_id": {
+          "$ref": "#/$defs/EventId",
+          "description": "= stream.latest_event_id"
+        },
+        "stream_id": {
+          "$ref": "#/$defs/StreamId"
+        },
+        "new_amount": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "= minimum_allowed_amount for reduce_to; null for stop"
+        }
       }
     },
-
     "Payment": {
-      "type": "object", "additionalProperties": false,
-      "required": ["date", "day", "amount"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "date",
+        "day",
+        "amount"
+      ],
       "properties": {
-        "date": { "$ref": "#/$defs/Date" },
-        "day": { "type": "integer", "minimum": 0, "description": "may exceed 90 for long installment plans; only days 0..90 are safety-checked" },
-        "amount": { "$ref": "#/$defs/Money" }
+        "date": {
+          "$ref": "#/$defs/Date"
+        },
+        "day": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "may exceed 90 for long installment plans; only days 0..90 are safety-checked"
+        },
+        "amount": {
+          "$ref": "#/$defs/Money"
+        }
       }
     },
-
     "Candidate": {
-      "type": "object", "additionalProperties": false,
-      "required": ["method", "payments", "option_id", "spending_changes", "safe", "total_paid", "completes_by_deadline", "first_payment_offset_days", "sort_key", "eligible", "rejection_reasons"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "payments",
+        "option_id",
+        "spending_changes",
+        "safe",
+        "total_paid",
+        "completes_by_deadline",
+        "first_payment_offset_days",
+        "sort_key",
+        "eligible",
+        "rejection_reasons"
+      ],
       "properties": {
-        "method": { "$ref": "#/$defs/PaymentMethod" },
-        "payments": { "type": "array", "items": { "$ref": "#/$defs/Payment" }, "description": "empty only for not_recommended" },
-        "option_id": { "oneOf": [ { "$ref": "#/$defs/OptionId" }, { "type": "null" } ] },
-        "spending_changes": { "type": "array", "maxItems": 3, "items": { "$ref": "#/$defs/SpendingChange" } },
-        "safe": { "type": "boolean" },
-        "total_paid": { "$ref": "#/$defs/Money" },
-        "completes_by_deadline": { "type": "boolean" },
-        "first_payment_offset_days": { "type": "integer", "minimum": 0 },
-        "sort_key": { "type": "array", "minItems": 6, "maxItems": 6, "items": {}, "description": "[deadline_miss(0|1), n_changes, total_paid, first_offset_days, n_payments, option_id_or_empty] — lower is better" },
-        "eligible": { "type": "boolean", "description": "passed filters 1 and 2 (method accepted, installment term gate)" },
-        "rejection_reasons": { "type": "array", "items": { "type": "string", "enum": ["method_not_accepted", "wait_requires_full_payment", "term_exceeds_max_installment_months", "unsafe", "partial_rule_I5"] } }
+        "method": {
+          "$ref": "#/$defs/PaymentMethod"
+        },
+        "payments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Payment"
+          },
+          "description": "empty only for not_recommended"
+        },
+        "option_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/OptionId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "spending_changes": {
+          "type": "array",
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/SpendingChange"
+          }
+        },
+        "safe": {
+          "type": "boolean"
+        },
+        "total_paid": {
+          "$ref": "#/$defs/Money"
+        },
+        "completes_by_deadline": {
+          "type": "boolean"
+        },
+        "first_payment_offset_days": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sort_key": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {},
+          "description": "[deadline_miss(0|1), n_changes, total_paid, first_offset_days, n_payments, option_id_or_empty] — lower is better"
+        },
+        "eligible": {
+          "type": "boolean",
+          "description": "passed filters 1 and 2 (method accepted, installment term gate)"
+        },
+        "rejection_reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "method_not_accepted",
+              "wait_requires_full_payment",
+              "term_exceeds_max_installment_months",
+              "unsafe",
+              "partial_rule_I5"
+            ]
+          }
+        }
       }
     },
-
     "OutputRow": {
       "description": "The eight cells exactly as they will be written. All strings.",
-      "type": "object", "additionalProperties": false,
-      "required": ["request_id", "amount_safe_to_pay", "affordability_status", "recommended_payment_method", "payment_plan", "earliest_date_for_full_payment", "spending_changes_needed", "decision_explanation"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request_id",
+        "amount_safe_to_pay",
+        "affordability_status",
+        "recommended_payment_method",
+        "payment_plan",
+        "earliest_date_for_full_payment",
+        "spending_changes_needed",
+        "decision_explanation"
+      ],
       "properties": {
-        "request_id": { "$ref": "#/$defs/RequestId" },
-        "amount_safe_to_pay": { "type": "string", "pattern": "^\\d+(\\.\\d+)?$" },
-        "affordability_status": { "$ref": "#/$defs/AffordabilityStatus" },
-        "recommended_payment_method": { "$ref": "#/$defs/PaymentMethod" },
-        "payment_plan": { "type": "string", "pattern": "^(none|\\d{4}-\\d{2}-\\d{2}:\\d+(\\.\\d+)?(\\|\\d{4}-\\d{2}-\\d{2}:\\d+(\\.\\d+)?)*)$" },
-        "earliest_date_for_full_payment": { "type": "string", "pattern": "^(\\d{4}-\\d{2}-\\d{2})?$" },
-        "spending_changes_needed": { "type": "string", "pattern": "^(none|(stop:event_\\d+|reduce_to:event_\\d+:\\d+(\\.\\d+)?)(\\|(stop:event_\\d+|reduce_to:event_\\d+:\\d+(\\.\\d+)?)){0,2})$" },
-        "decision_explanation": { "type": "string", "minLength": 20 }
+        "request_id": {
+          "$ref": "#/$defs/RequestId"
+        },
+        "amount_safe_to_pay": {
+          "type": "string",
+          "pattern": "^\\d+(\\.\\d+)?$"
+        },
+        "affordability_status": {
+          "$ref": "#/$defs/AffordabilityStatus"
+        },
+        "recommended_payment_method": {
+          "$ref": "#/$defs/PaymentMethod"
+        },
+        "payment_plan": {
+          "type": "string",
+          "pattern": "^(none|\\d{4}-\\d{2}-\\d{2}:\\d+(\\.\\d+)?(\\|\\d{4}-\\d{2}-\\d{2}:\\d+(\\.\\d+)?)*)$"
+        },
+        "earliest_date_for_full_payment": {
+          "type": "string",
+          "pattern": "^(\\d{4}-\\d{2}-\\d{2})?$"
+        },
+        "spending_changes_needed": {
+          "type": "string",
+          "pattern": "^(none|(stop:event_\\d+|reduce_to:event_\\d+:\\d+(\\.\\d+)?)(\\|(stop:event_\\d+|reduce_to:event_\\d+:\\d+(\\.\\d+)?)){0,2})$"
+        },
+        "decision_explanation": {
+          "type": "string",
+          "minLength": 20
+        }
       }
     },
-
     "Diagnostics": {
       "description": "Provenance that travels with every Decision (spec §7, §13). write.py ignores it; score.py and ablation.py read it.",
-      "type": "object", "additionalProperties": false,
-      "required": ["capacity", "streams", "oneoffs", "exclusions", "link_resolutions", "operations_applied", "candidates", "winning_sort_key", "config"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capacity",
+        "streams",
+        "oneoffs",
+        "exclusions",
+        "link_resolutions",
+        "operations_applied",
+        "candidates",
+        "winning_sort_key",
+        "config"
+      ],
       "properties": {
-        "capacity": { "$ref": "#/$defs/Capacity" },
-        "streams": { "type": "array", "items": { "$ref": "#/$defs/Stream" } },
-        "oneoffs": { "type": "array", "items": { "$ref": "#/$defs/OneOff" } },
-        "exclusions": { "type": "array", "items": { "type": "object", "required": ["event_id", "reason"], "properties": { "event_id": { "$ref": "#/$defs/EventId" }, "reason": { "$ref": "#/$defs/ExclusionReason" } } } },
-        "link_resolutions": { "type": "array", "items": { "$ref": "#/$defs/LinkResolution" } },
-        "operations_applied": { "type": "array", "items": { "$ref": "#/$defs/Operation" } },
-        "candidates": { "type": "array", "items": { "$ref": "#/$defs/Candidate" } },
-        "winning_sort_key": { "type": ["array", "null"] },
-        "config": { "$ref": "#/$defs/RunConfig" }
+        "capacity": {
+          "$ref": "#/$defs/Capacity"
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Stream"
+          }
+        },
+        "oneoffs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OneOff"
+          }
+        },
+        "exclusions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "event_id",
+              "reason"
+            ],
+            "properties": {
+              "event_id": {
+                "$ref": "#/$defs/EventId"
+              },
+              "reason": {
+                "$ref": "#/$defs/ExclusionReason"
+              }
+            }
+          }
+        },
+        "link_resolutions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LinkResolution"
+          }
+        },
+        "operations_applied": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Operation"
+          }
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Candidate"
+          }
+        },
+        "winning_sort_key": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "config": {
+          "$ref": "#/$defs/RunConfig"
+        }
       }
     },
-
     "Decision": {
-      "type": "object", "additionalProperties": false,
-      "required": ["request_id", "row", "chosen", "diagnostics"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request_id",
+        "row",
+        "chosen",
+        "diagnostics"
+      ],
       "properties": {
-        "request_id": { "$ref": "#/$defs/RequestId" },
-        "row": { "$ref": "#/$defs/OutputRow" },
-        "chosen": { "oneOf": [ { "$ref": "#/$defs/Candidate" }, { "type": "null" } ], "description": "null iff not_recommended" },
-        "diagnostics": { "$ref": "#/$defs/Diagnostics" }
+        "request_id": {
+          "$ref": "#/$defs/RequestId"
+        },
+        "row": {
+          "$ref": "#/$defs/OutputRow"
+        },
+        "chosen": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Candidate"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "null iff not_recommended"
+        },
+        "diagnostics": {
+          "$ref": "#/$defs/Diagnostics"
+        }
       }
     },
-
     "LinkResolution": {
-      "type": "object", "additionalProperties": false,
-      "required": ["parent_id", "child_id", "pattern", "effect"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parent_id",
+        "child_id",
+        "pattern",
+        "effect"
+      ],
       "properties": {
-        "parent_id": { "$ref": "#/$defs/EventId" },
-        "child_id": { "$ref": "#/$defs/EventId" },
-        "pattern": { "type": "string", "enum": ["refund_settled", "refund_pending", "authorization_then_purchase", "duplicate_charge", "failed_then_retry", "valuation", "investment_sale", "unknown"] },
-        "effect": { "type": "string", "enum": ["both_count", "exclude_child", "exclude_parent", "precedence_ladder"] }
+        "parent_id": {
+          "$ref": "#/$defs/EventId"
+        },
+        "child_id": {
+          "$ref": "#/$defs/EventId"
+        },
+        "pattern": {
+          "type": "string",
+          "enum": [
+            "refund_settled",
+            "refund_pending",
+            "authorization_then_purchase",
+            "duplicate_charge",
+            "failed_then_retry",
+            "valuation",
+            "investment_sale",
+            "unknown"
+          ]
+        },
+        "effect": {
+          "type": "string",
+          "enum": [
+            "both_count",
+            "exclude_child",
+            "exclude_parent",
+            "precedence_ladder"
+          ]
+        }
       }
     },
-
     "Operation": {
       "description": "One validated message operation. Anything the port returns that does not fit this shape becomes op=none.",
-      "type": "object", "additionalProperties": false,
-      "required": ["message_id", "op", "target_kind", "target_id", "new_amount", "effective_date", "ended", "one_occurrence_only"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message_id",
+        "op",
+        "target_kind",
+        "target_id",
+        "new_amount",
+        "effective_date",
+        "ended",
+        "one_occurrence_only"
+      ],
       "properties": {
-        "message_id": { "$ref": "#/$defs/MessageId" },
-        "op": { "$ref": "#/$defs/Op" },
-        "target_kind": { "type": "string", "enum": ["event", "stream", "none"] },
-        "target_id": { "type": ["string", "null"], "description": "must be in the allow-list handed to the port, else the whole operation is none" },
-        "new_amount": { "oneOf": [ { "$ref": "#/$defs/Money" }, { "type": "null" } ], "description": "in the message's stated currency; amend.py converts" },
-        "currency": { "oneOf": [ { "$ref": "#/$defs/Currency" }, { "type": "null" } ] },
-        "effective_date": { "oneOf": [ { "$ref": "#/$defs/Date" }, { "type": "null" } ] },
-        "ended": { "type": "boolean" },
-        "one_occurrence_only": { "type": "boolean" }
+        "message_id": {
+          "$ref": "#/$defs/MessageId"
+        },
+        "op": {
+          "$ref": "#/$defs/Op"
+        },
+        "target_kind": {
+          "type": "string",
+          "enum": [
+            "event",
+            "stream",
+            "none"
+          ]
+        },
+        "target_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "must be in the allow-list handed to the port, else the whole operation is none"
+        },
+        "new_amount": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "in the message's stated currency; amend.py converts"
+        },
+        "currency": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Currency"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effective_date": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ended": {
+          "type": "boolean"
+        },
+        "one_occurrence_only": {
+          "type": "boolean"
+        }
       }
     },
-
     "VisionResult": {
-      "type": "object", "additionalProperties": false,
-      "required": ["image_id", "event_id", "amount_raw", "amount", "currency", "field_used", "confidence", "backend", "prompt_version", "cache_key"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "image_id",
+        "event_id",
+        "amount_raw",
+        "amount",
+        "currency",
+        "field_used",
+        "confidence",
+        "backend",
+        "prompt_version",
+        "cache_key"
+      ],
       "properties": {
-        "image_id": { "$ref": "#/$defs/ImageId" },
-        "event_id": { "$ref": "#/$defs/EventId" },
-        "amount_raw": { "type": "string", "description": "verbatim as printed, e.g. '1,00,000.00'" },
-        "amount": { "$ref": "#/$defs/Money", "description": "parsed by CODE from amount_raw, in `currency` (not yet converted)" },
-        "currency": { "$ref": "#/$defs/Currency" },
-        "field_used": { "type": "string", "description": "label of the document field read, e.g. 'Net Pay', 'Balance Due', 'Total'" },
-        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-        "backend": { "type": "string", "enum": ["llm", "ocr", "table"] },
-        "prompt_version": { "type": "string" },
-        "cache_key": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        "image_id": {
+          "$ref": "#/$defs/ImageId"
+        },
+        "event_id": {
+          "$ref": "#/$defs/EventId"
+        },
+        "amount_raw": {
+          "type": "string",
+          "description": "verbatim as printed, e.g. '1,00,000.00'"
+        },
+        "amount": {
+          "$ref": "#/$defs/Money",
+          "description": "parsed by CODE from amount_raw, in `currency` (not yet converted)"
+        },
+        "currency": {
+          "$ref": "#/$defs/Currency"
+        },
+        "field_used": {
+          "type": "string",
+          "description": "label of the document field read, e.g. 'Net Pay', 'Balance Due', 'Total'"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "backend": {
+          "type": "string",
+          "enum": [
+            "llm",
+            "ocr",
+            "table"
+          ]
+        },
+        "prompt_version": {
+          "type": "string"
+        },
+        "cache_key": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
       }
     },
-
     "RunConfig": {
       "description": "Feature flags for ablation. MVP = all false.",
-      "type": "object", "additionalProperties": false,
-      "required": ["links", "vision", "ops", "spending_changes"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "links",
+        "vision",
+        "ops",
+        "spending_changes"
+      ],
       "properties": {
-        "links": { "type": "boolean" },
-        "vision": { "type": "boolean" },
-        "ops": { "type": "boolean" },
-        "spending_changes": { "type": "boolean" },
-        "reapply_settled_past": { "type": "boolean", "default": false, "description": "ablation-only: must make calibration WORSE (spec §3 guard 3)" }
+        "links": {
+          "type": "boolean"
+        },
+        "vision": {
+          "type": "boolean"
+        },
+        "ops": {
+          "type": "boolean"
+        },
+        "spending_changes": {
+          "type": "boolean"
+        },
+        "reapply_settled_past": {
+          "type": "boolean",
+          "default": false,
+          "description": "ablation-only: must make calibration WORSE (spec §3 guard 3)"
+        }
       }
     },
-
     "UsageRecord": {
-      "type": "object", "additionalProperties": false,
-      "required": ["port", "provider", "model", "calls", "cache_hits", "input_tokens", "output_tokens", "estimated_cost_usd"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "port",
+        "provider",
+        "model",
+        "calls",
+        "cache_hits",
+        "input_tokens",
+        "output_tokens",
+        "estimated_cost_usd"
+      ],
       "properties": {
-        "port": { "type": "string", "enum": ["vision", "ops"] },
-        "provider": { "type": "string" },
-        "model": { "type": "string" },
-        "calls": { "type": "integer", "minimum": 0 },
-        "cache_hits": { "type": "integer", "minimum": 0 },
-        "input_tokens": { "type": "integer", "minimum": 0 },
-        "output_tokens": { "type": "integer", "minimum": 0 },
-        "estimated_cost_usd": { "type": "number", "minimum": 0 }
+        "port": {
+          "type": "string",
+          "enum": [
+            "vision",
+            "ops"
+          ]
+        },
+        "provider": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "calls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cache_hits": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "input_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "output_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "estimated_cost_usd": {
+          "type": "number",
+          "minimum": 0
+        }
       }
     }
   }
