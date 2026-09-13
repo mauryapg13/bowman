@@ -144,3 +144,31 @@ mean |delta| ≈ 200k; the big rows each have a named cause in `docs/mvp_results
   spec — every correction goes in spec §14.
 - Any absence not in spec §4.7's table is a new case: add the row before the code.
 - Every turn is logged to repo-root `log.txt` with `tool=Claude Code`.
+
+## Learned while decoding the sample key (2026-09-13, branch feat/ruleset; full detail in docs/ruleset.md)
+
+- **Amount noise is uniform, not normal**: `amount / midrange` is flat on [0.72, 1.28] for groceries /
+  transport / dining and on [0.88, 1.12] for monthly bills (892 varying streams). Learned by histogramming
+  (`scratch/noise_shape3.py`). Bulk purchases are the only values outside the band.
+- **Base amounts live on a currency grid**: every constant stream is integer × {EUR 1, USD 1, ZAR 1.1, INR 5,
+  IDR 50}; EUR rent is integer × 1.1, USD rent integer × 1.2. The **key's** pre-trough varying totals sit on
+  the same grid (ZAR 15,390 × 1.1 and 7,368 × 1.1; IDR multiples of 100) → the key's per-stream amounts are
+  the generator's hidden base parameters. No history statistic (504 window × statistic × rounding combos)
+  reproduces more than 2/20 rows exactly. Stop looking for "the estimator": the residuals are estimation
+  error of a hidden μ, a few percent per item, both signs.
+- **The uncapped `amount_safe_to_pay` is exact on one sample row (08)**; score.py's "exact" column uses a
+  0.5 % tolerance. Quote both numbers.
+- **A recorded occurrence after the request must not silence the forecast** (R7/R8): a pending "fuel
+  authorization" two days after the request was absorbed as the transport stream's latest occurrence and
+  switched off the day-5 restart (request_21); a scheduled "insurance payment" of another amount was taken
+  as the policy's next occurrence and dropped the real bill (request_24). The key reserves the pending /
+  scheduled row **and** keeps the recurring forecast. Audit every non-settled row against this.
+- **The ops cache key includes the stream view**: any change to stream detection/absorption re-reads the
+  affected users' messages live (6 calls for R8). Check `grep -c '"calls": 1' code/evaluation/usage.jsonl`
+  before and after an experiment, and commit new `code/cache/` entries.
+- **CI has no API keys**: the ops port must be cache-first (it is now); otherwise CI scores an ops-less run
+  and the calibration gate diverges from local.
+- **Rejected again with counts**: pure clock schedule (9/20 count vectors vs 16/20 for the day-5 restart),
+  any single first day (04 wants ≤ 3, 06/25 want ≥ 4, 22 wants 5), grid snapping, feasible-midpoint
+  estimator (better in expectation, not on the jury), point-check earliest date (23 → 11), look-ahead
+  windows 30–75 d, horizon 90 (request_10 wants day 89 counted, 08/12/13 want day 87 excluded — unresolved).
