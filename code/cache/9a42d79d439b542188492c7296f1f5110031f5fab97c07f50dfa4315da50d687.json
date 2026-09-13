@@ -1,0 +1,16 @@
+{
+  "model": "z-ai/glm-5.3-flash",
+  "provider": "openrouter",
+  "raw": [
+    {
+      "currency": "INR",
+      "effective_date": "2025-05-15",
+      "ended": false,
+      "new_amount": 84000,
+      "one_occurrence_only": false,
+      "op": "start_stream",
+      "target_id": "new:salary",
+      "target_kind": "stream"
+    }
+  ]
+}

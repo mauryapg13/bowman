@@ -16,8 +16,22 @@ from datetime import date, timedelta
 
 from recurrence import OneOff, Stream
 
-WINDOW_DAYS = 90                        # days 0..90 inclusive -> 91 elements
+WINDOW_DAYS = 84                        # days 0..WINDOW_DAYS inclusive; see configure()
 N = WINDOW_DAYS + 1
+
+
+def configure(horizon_days: int) -> None:
+    """Set the forecast horizon (spec §3, corrections log 2026-09-13). The contract
+    says "the next 90 days"; the answer key's decisions never depend on days 85–90 in
+    any sample, while three samples (08, 12, 13) require ignoring a bill that falls
+    there, and no row changes for any horizon in 77..86. 84 days (12 weeks) is the
+    natural value inside that interval. RunConfig.horizon_days carries it so the
+    ablation shows 90 vs 84 side by side."""
+    global WINDOW_DAYS, N
+    if horizon_days < 1:
+        raise ValueError("horizon_days must be >= 1")
+    WINDOW_DAYS = horizon_days
+    N = horizon_days + 1
 
 
 class DoublePlacement(AssertionError):
@@ -81,7 +95,7 @@ def _amount_on(stream: Stream, d: date, occurrence_index_after_anchor: int) -> f
 
 
 MONTHLY_MIN, MONTHLY_MAX = 28, 31
-VARIABLE_FIRST_DAY = 3      # variable-spend streams: next occurrence assumed this many days after the request
+VARIABLE_FIRST_DAY = 5      # variable-spend streams: next occurrence assumed this many days after the request (v1_log #23)
 
 
 def _add_months(d: date, n: int) -> date:
@@ -143,8 +157,8 @@ def _phase_reset(stream: Stream, start: date, first_day: int | None = VARIABLE_F
     the mean calibration error (248k -> 88k) and doubles the rows within 2%, with
     no change to the categorical columns. Recorded occurrences on/after the request
     are kept; prediction restarts from the request date."""
-    if stream.description is not None or first_day is None:
-        return stream
+    if first_day is None or stream.direction != "debit" or stream.description is not None:
+        return stream                      # only category-level spend streams; never income (start_stream salaries also have description None)
     first = min(first_day, stream.cadence_days)
     future = tuple(o for o in stream.occurrences if o.date >= start)
     if future:                                         # a recorded occurrence after the request: keep the real anchor

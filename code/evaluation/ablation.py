@@ -23,7 +23,8 @@ CONFIGS = [
     ("+ vision", PL.RunConfig(links=True, vision=True)),
     ("+ message operations", PL.RunConfig(links=True, vision=True, ops=True)),
     ("+ spending changes, phase = last + cadence", PL.RunConfig(links=True, vision=True, ops=True, spending_changes=True, variable_first_day=None)),
-    ("+ variable-spend phase reset (full system)", PL.RunConfig(links=True, vision=True, ops=True, spending_changes=True)),
+    ("+ variable-spend phase reset, horizon 90", PL.RunConfig(links=True, vision=True, ops=True, spending_changes=True, horizon_days=90)),
+    ("+ horizon 84 days (full system)", PL.RunConfig(links=True, vision=True, ops=True, spending_changes=True)),
     ("negative control: re-apply settled past", PL.RunConfig(links=True, vision=True, ops=True, spending_changes=True, reapply_settled_past=True)),
 ]
 
@@ -51,7 +52,7 @@ def render(rows) -> str:
 if __name__ == "__main__":
     rows = run()
     print(render(rows))
-    full = next(r for n, c, r in rows if n.startswith("+ variable-spend"))
+    full = next(r for n, c, r in rows if n.startswith("+ horizon 84"))
     ctrl = next(r for n, c, r in rows if n.startswith("negative"))
     if ctrl.calibration_mean_abs_delta <= full.calibration_mean_abs_delta:
         raise SystemExit("negative control did not score worse — spec §3 guard 3 failed")

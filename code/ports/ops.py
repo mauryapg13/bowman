@@ -19,7 +19,7 @@ from ports import cache as C                      # noqa: E402
 from ports import llm as LLM                      # noqa: E402
 from evaluation import usage as U                 # noqa: E402
 
-PROMPT_VERSION = "ops-v2"
+PROMPT_VERSION = "ops-v3"
 OPS = ("cancel", "amend_amount", "delay", "confirm", "amend_stream", "start_stream", "none")
 CURRENCIES = ("INR", "EUR", "IDR", "ZAR", "USD")
 
@@ -40,8 +40,12 @@ SYSTEM = (
     "new_amount, currency and effective_date — this is confirmed recurring monthly income; "
     "delay = the next occurrence moves to effective_date; cancel = the linked event will not happen; "
     "amend_amount = the linked event's amount changes; confirm = the linked event is confirmed as-is; "
-    "none = nothing in the user's ledger changes (pending refunds, unapproved bonuses/commissions, pending gig "
-    "payouts, prize claims in processing, disputes, transfers between the user's own accounts, market value of "
+    "Unconfirmed platform income: when a gig/delivery/driver/task-marketplace/app platform says its next payout is "
+    "still pending, not yet closed, or not withdrawable, that user's platform-payout income is not confirmed — return "
+    "amend_stream with ended:true for EACH credit stream on the allow-list whose description is a platform/app/gig "
+    "payout or earnings (never an employer payroll or salary stream). "
+    "none = nothing in the user's ledger changes (pending refunds, unapproved bonuses/commissions, "
+    "prize claims in processing, disputes, transfers between the user's own accounts, market value of "
     "unsold investments, informational notes). Never invent a stream or event that is not on the allow-list. "
     "A percentage change (e.g. rent +12%) becomes new_amount = current amount * 1.12 using the amount given in "
     "the allow-list. Copy amounts as written in the message with their currency. If the message names an "

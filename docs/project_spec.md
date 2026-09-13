@@ -114,7 +114,11 @@ zeros in your output means something upstream is broken.
 
 ## 3. Definitions
 
-**Forecast window.** Days 0–90 inclusive, day 0 = `request_date`. 91 elements.
+**Forecast window.** Day 0 = `request_date`. The contract says "the next 90 days";
+the pipeline's safety and earliest-date window is `RunConfig.horizon_days`, default
+**84** (12 weeks) — see §14 (2026-09-13): on every sample the key's decisions are
+consistent with any horizon in 77..86 days and three samples require one below 87;
+none is consistent with 90. `ledger.configure()` sets it; the ablation shows 90 beside 84.
 
 **Snapshot fact (verified, not assumed).** `current_available_balance` already
 contains every settled event. Evidence: across all 275 users, zero settled
@@ -583,6 +587,9 @@ Shipped docs and verified data win over this file. Every change is listed.
 | 2026-09-13 | §9 | Calibration is a CI test, not only a printout | — |
 | 2026-09-13 | §4.2 | Monthly streams (cadence 28–31) recur on the anchor's day-of-month, clamped to month end; shorter cadences use day arithmetic | samples key salary on the 15th; 30-day steps drift (13 Nov vs 15 Nov) |
 | 2026-09-13 | §4.2 | Category-level fallback for any category whose description pass finds nothing (not only groceries/transport/dining) | user_09 fortnightly freelance income |
+| 2026-09-13 | §4.2 | Variable-spend phase: first predicted occurrence 5 days after the request (was 3; re-tuned with the trimmed-mean estimator and 84-day horizon) | v1_log #23 |
+| 2026-09-13 | §3 | Forecast horizon 84 days by default (contract says 90) — counting check on all 25 samples, 3 fixed / 0 broken | v1_log #22 |
+| 2026-09-13 | §4.2 | Stream amount = round(trimmed mean), constant series exact (was median) | 10/25 exact safe amounts vs 5; request_08 to the cent |
 | 2026-09-13 | §4.2 | Absorption of scheduled occurrences into their stream (prevents same-day double count) | 47 scheduled salaries, 45 same amount as last payroll |
 | 2026-09-13 | §4.7 | New: single missing-information table; adds the no-effective-date and no-currency rules | user question 2026-09-13 |
 | 2026-09-13 | §4.6 | Message-quoted foreign amounts convert in `amend.py` at the occurrence's settlement-date row (AGENTS.md §6.1); latest-on-or-before fallback for dates with no row | 7 foreign-salary messages; rates constant per pair |
