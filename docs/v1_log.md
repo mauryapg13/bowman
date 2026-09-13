@@ -46,7 +46,9 @@ Baseline (MVP, docs/mvp_results.md): cat 64%, Δ 250,286.
 | 27 | ops-v3: a platform saying its payout is pending / not withdrawable makes that user's platform-payout income unconfirmed → `amend_stream ended` on each platform/app/gig payout stream (never payroll) | 84% | 100k (mean abs safe error 109k → 100k) | yes | request_10: 266,700 → 38,312 (key 12,700); measured first that dropping those streams is what the key does. On the 250: 23 platform streams ended for the payout-pending users; the 12 non-platform endings are all "employment / seasonal contract has ended" messages (correct). Samples otherwise unchanged. Prompt bump re-classified all 215 messages (~$0.10) |
 | 28 | request_05 termination timing | — | — | no change needed | the payroll stream already ends at the missing October occurrence; no income in the window; the +366 residual is 82 days of accumulated variable-spend estimate noise (1.2σ) |
 
-## Open misses after #28 (see score.py output)
+| 29 | boundary study of 06/11/19/21 after #27: margins of the key's plan on our curve — 06 **−4.10** (full+stop), 11 −156k (full+reduce), 21 +50.45 (full w/o changes safe for us, unsafe for the key), 19 +1,250 (partial split); spending-change semantics variant (effective from anchor) | 84% | — | no change | signs of the residuals are mixed across rows (06/07/17/20 pessimistic, 13/14/15/19/21/23 optimistic), so no tolerance or bias tips the boundary rows consistently. On the 250, 22 decisions sit within 1% of balance of a safety boundary (47 within 2%) — the expected coin-flip exposure |
+
+## Open misses after #29 (see score.py output)
 
 - request_05: ended payroll cut too early — our min 7,777 vs key 13,837 (key still counts one more occurrence or cuts later expenses).
 - after #23 the categorical misses are 06, 11, 19, 21
