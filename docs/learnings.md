@@ -99,6 +99,9 @@ file is the *why* and the *gotchas*. Append, never rewrite history; date each en
 - **The key's variable-spend estimator is not median/mean/last/last-N × median-gap/mean-gap/7/14**
   (30-combo grid, ≤2 of 20 rows exact). Residuals of a few percent on ~6 users remain; exactness
   on `amount_safe_to_pay` is not reachable by tuning this family. Don't spend more time there.
+- **Variable-spend amounts are i.i.d. noise** (800 streams: lag-1 autocorrelation −0.08, no trend,
+  every predictor at the ~15% floor, mean/median best). Figures: `docs/why_variable_spend_is_noise.png`,
+  `docs/sample_curves.png`. No "prediction factor" can help; don't build one.
 - **A cadence of 0 days loops the ledger forever** — guard `cadence_days >= 1` (hit during the grid
   with a last-gap rule on same-day occurrences).
 - **Ops cache keys must not depend on the forecast estimator**: the model's stream view uses the
