@@ -28,6 +28,21 @@ import write as WR
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
+def _load_dotenv(path: Path = REPO_ROOT / ".env") -> None:
+    """Minimal .env reader: KEY=VALUE lines, no expansion, never overrides a set variable."""
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        os.environ.setdefault(k.strip(), v.strip().strip("'\""))
+
+
+_load_dotenv()
+
+
 @dataclass(frozen=True, slots=True)
 class Diagnostics:
     capacity: LG.Capacity
@@ -62,9 +77,11 @@ def build_ports(config: PL.RunConfig) -> Ports:
     if config.vision:
         from ports.vision import VisionPort
         vision = VisionPort()
-    if config.ops and os.environ.get("ANTHROPIC_API_KEY"):
-        from ports.ops import OpsPort
-        ops = OpsPort()
+    if config.ops:
+        from ports import llm as LLM
+        if LLM.provider():
+            from ports.ops import OpsPort
+            ops = OpsPort()
     return Ports(vision=vision, ops=ops)
 
 

@@ -22,6 +22,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ports import cache as C                      # noqa: E402
+from ports import llm as LLM                      # noqa: E402
 from evaluation import usage as U                 # noqa: E402
 
 PROMPT_VERSION = "vision-v1"
@@ -88,9 +89,10 @@ def _validate(obj: dict) -> tuple[str, str, str, float]:
 class VisionPort:
     def __init__(self, backend: str | None = None, cache: C.Cache | None = None, model: str | None = None):
         self.cache = cache or C.Cache()
-        self.model = model or os.environ.get("BOWMAN_VISION_MODEL", "claude-opus-5")
+        prov = LLM.provider()
+        self.model = model or os.environ.get("BOWMAN_VISION_MODEL") or (LLM.default_model(prov) if prov else "")
         if backend is None:
-            backend = "llm" if os.environ.get("ANTHROPIC_API_KEY") else "table"
+            backend = "llm" if prov else "table"
         self.backend = backend
         self._table = json.loads(TABLE.read_text(encoding="utf-8"))["entries"] if backend == "table" else None
 
@@ -110,34 +112,24 @@ class VisionPort:
             provider, model = "table", "reviewed-transcription"
             in_tok = out_tok = 0
         else:
-            raw, cur, field, conf, in_tok, out_tok, rid = self._call_llm(data, description, category, event_type)
-            provider, model = "anthropic", self.model
+            raw, cur, field, conf, in_tok, out_tok, provider, model = self._call_llm(data, description, category, event_type)
         result = VisionResult(image_id, event_id, raw, parse_amount(raw), cur, field, conf, self.backend, PROMPT_VERSION, k)
         self.cache.put(k, {"provider": provider, "model": model, "result": {kk: v for kk, v in asdict(result).items() if kk != "cache_key"}})
         U.record("vision", provider, model, in_tok, out_tok, cache_hit=False)
         return result
 
     def _call_llm(self, data: bytes, description: str, category: str, event_type: str):
-        try:
-            import anthropic
-        except ImportError as e:                                   # fail gracefully at the edge
-            raise VisionError("anthropic SDK not installed (pip install anthropic)") from e
-        client = anthropic.Anthropic()
         user_text = (f"Event description: {description}\nEvent category: {category}\nEvent type: {event_type}\n"
                      f"Return the JSON object only.")
-        resp = client.messages.create(
-            model=self.model, max_tokens=256, system=SYSTEM,
-            messages=[{"role": "user", "content": [
-                {"type": "image", "source": {"type": "base64", "media_type": "image/png",
-                                             "data": base64.standard_b64encode(data).decode("utf-8")}},
-                {"type": "text", "text": user_text}]}],
-        )
-        text = "".join(b.text for b in resp.content if b.type == "text").strip()
+        try:
+            text, in_tok, out_tok, provider, model = LLM.complete(SYSTEM, user_text, image_png=data, model=self.model, max_tokens=256)
+        except LLM.LLMError as e:
+            raise VisionError(str(e)) from e
         m = re.search(r"\{.*\}", text, re.S)
         if not m:
             raise VisionError(f"no JSON in response: {text[:120]!r}")
         raw, cur, field, conf = _validate(json.loads(m.group(0)))
-        return raw, cur, field, conf, resp.usage.input_tokens, resp.usage.output_tokens, getattr(resp, "_request_id", None)
+        return raw, cur, field, conf, in_tok, out_tok, provider, model
 
 
 def _regenerate_table() -> None:

@@ -16,6 +16,7 @@ REPORT = Path(__file__).resolve().parent / "usage_report.md"
 
 # USD per 1M tokens (input, output) — Anthropic list prices, 2026-06.
 PRICES = {
+    "z-ai/glm-5.3-flash": (0.15, 0.50),            # OpenRouter list price, 2026-09-13
     "claude-opus-5": (5.00, 25.00),
     "claude-sonnet-5": (2.00, 10.00),
     "claude-haiku-4-5": (1.00, 5.00),

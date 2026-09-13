@@ -16,6 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ports import cache as C                      # noqa: E402
+from ports import llm as LLM                      # noqa: E402
 from evaluation import usage as U                 # noqa: E402
 
 PROMPT_VERSION = "ops-v1"
@@ -97,7 +98,8 @@ def _validate(mid: str, raw: dict, allowed_events: set[str], allowed_streams: se
 class OpsPort:
     def __init__(self, cache: C.Cache | None = None, model: str | None = None):
         self.cache = cache or C.Cache()
-        self.model = model or os.environ.get("BOWMAN_OPS_MODEL", "claude-opus-5")
+        prov = LLM.provider()
+        self.model = model or os.environ.get("BOWMAN_OPS_MODEL") or (LLM.default_model(prov) if prov else "")
 
     def operations(self, message_id: str, message_text: str, related_event: dict | None,
                    streams: list[dict]) -> list[Operation]:
@@ -112,20 +114,16 @@ class OpsPort:
             U.record("ops", hit.get("provider", "cache"), hit.get("model", ""), 0, 0, cache_hit=True)
             raw_ops = hit["raw"]
         else:
-            raw_ops, in_tok, out_tok = self._call_llm(payload)
-            self.cache.put(k, {"provider": "anthropic", "model": self.model, "raw": raw_ops})
-            U.record("ops", "anthropic", self.model, in_tok, out_tok, cache_hit=False)
+            raw_ops, in_tok, out_tok, provider, model = self._call_llm(payload)
+            self.cache.put(k, {"provider": provider, "model": model, "raw": raw_ops})
+            U.record("ops", provider, model, in_tok, out_tok, cache_hit=False)
         ops = [_validate(message_id, r if isinstance(r, dict) else {}, allowed_events, allowed_streams) for r in raw_ops]
         return [o for o in ops if o.op != "none"] or [NONE_OP(message_id)]
 
     def _call_llm(self, payload: str):
-        import anthropic
-        client = anthropic.Anthropic()
-        resp = client.messages.create(model=self.model, max_tokens=1024, system=SYSTEM,
-                                      messages=[{"role": "user", "content": payload}])
-        text = "".join(b.text for b in resp.content if b.type == "text").strip()
+        text, in_tok, out_tok, provider, model = LLM.complete(SYSTEM, payload, model=self.model, max_tokens=1024)
         m = re.search(r"\[.*\]", text, re.S)
         raw = json.loads(m.group(0)) if m else []
         if not isinstance(raw, list):
             raw = []
-        return raw, resp.usage.input_tokens, resp.usage.output_tokens
+        return raw, in_tok, out_tok, provider, model
