@@ -27,7 +27,9 @@ Baseline (MVP, docs/mvp_results.md): cat 64%, Δ 250,286.
 | 17 | forecast horizon 60–89 days instead of 90 | 72–80% | 88k | **not adopted** | ≤86 days flips request_08/13 to the key's `wait` (their day-87 rent/school fee is what blocks us) but the threshold is unexplained and the contract says 90 days |
 | 18 | safety look-ahead of 30/45/60 days after a payment instead of the full window | 64–68% | 88k | **reverted** | worse |
 
-## Open misses after #18 (see score.py output)
+| 19 | rounding: predicted variable amounts rounded to 1 / 10 / 100 units per currency (also all streams) | 72% | 87.9k | **no change** | user's observation is real though: the key's outflow-to-trough is an exact integer on 12/20 rows (157.00, 452.00, 624.00, 568.00, 487.00, 1,134.00, 140,430.00, 38,775.00, 13,996,350.00 …) while our streams carry cents — the key rounds *something* we don't. Integer decompositions of those totals are non-unique (too many count×amount combos), so the exact rule is not recoverable from 20 rows. Open lead for V2 |
+
+## Open misses after #19 (see score.py output)
 
 - request_05: ended payroll cut too early — our min 7,777 vs key 13,837 (key still counts one more occurrence or cuts later expenses).
 - after #13 the remaining residuals are: 02 −130k, 03 +16k, 04 −176k, 07 −8.9k, 11 −389k, 19 −3.4k, 25 −645k (all IDR/INR users with large weekly streams) and 06 −58, 21 +59, 23 +66 — a few percent of the pre-payday variable spend; no estimator variant fixed them (#9, #11, #14).

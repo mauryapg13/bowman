@@ -102,6 +102,10 @@ file is the *why* and the *gotchas*. Append, never rewrite history; date each en
 - **Variable-spend amounts are i.i.d. noise** (800 streams: lag-1 autocorrelation −0.08, no trend,
   every predictor at the ~15% floor, mean/median best). Figures: `docs/why_variable_spend_is_noise.png`,
   `docs/sample_curves.png`. No "prediction factor" can help; don't build one.
+- **The key's outflow totals are integers on 12/20 sample rows** (EUR/USD users included), while
+  every fixed bill and median in our streams carries cents. The key rounds its predicted amounts
+  somewhere we don't; rounding our medians (1/10/100 units) changes nothing, so the rounding is
+  applied to a different base. Not decodable from 20 rows; open lead.
 - **A cadence of 0 days loops the ledger forever** — guard `cadence_days >= 1` (hit during the grid
   with a last-gap rule on same-day occurrences).
 - **Ops cache keys must not depend on the forecast estimator**: the model's stream view uses the
