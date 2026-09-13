@@ -165,8 +165,9 @@ def _absorb(streams: list[Stream], leftovers: list[Event]) -> tuple[list[Stream]
             delta = (cash_date(e) - s.anchor).days
             if not (s.cadence_days - ABSORB_TOLERANCE_DAYS <= delta <= s.cadence_days + ABSORB_TOLERANCE_DAYS):
                 continue
-            if e.direction == "debit" and not _amount_compatible(s, e.amount):       # type: ignore[arg-type]
+            if e.direction == "debit" and e.linked_event_id is None and not _amount_compatible(s, e.amount):   # type: ignore[arg-type]
                 continue                       # R8 (docs/ruleset.md): another amount => an additional confirmed payment, not the bill
+                                               # (a linked row — the scheduled retry of a failed attempt — is the bill itself)
             fits.append((abs(e.amount - s.amount) / max(s.amount, 1e-9), i, delta))     # type: ignore[operator]
         if not fits:
             remaining.append(e)

@@ -101,8 +101,9 @@ it reserves the scheduled 1,830 **and** keeps the 2,510 bill. Across all 275 use
 touched 14 non-salary scheduled rows: 6 "Scheduled bill payment retry" (amount inside the bill's
 range — still absorbed, the retry *is* the month's bill after a failed attempt), 4 "Scheduled utility
 debit" (+37 d, ≈ 60 % of the bill), 2 "Scheduled insurance payment", 1 "Scheduled school fee" (the
-last three families have another amount — no longer absorbed). Implementation: `code/recurrence.py`
-`_absorb` / `_amount_compatible`.
+last three families have another amount — no longer absorbed). A scheduled row that carries a
+`linked_event_id` (the retry of a failed attempt) is the bill itself and is absorbed regardless of amount.
+Implementation: `code/recurrence.py` `_absorb` / `_amount_compatible`.
 
 Side effect to disclose: the message-operation port's cache key includes the stream view, so the
 changed absorption for 6 users triggered 6 live GLM-5.3-Flash calls (≈ $0.003) during the R8
