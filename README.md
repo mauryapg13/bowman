@@ -18,7 +18,42 @@ Read [`problem_statement.md`](./problem_statement.md) for the full task spec, in
 
 ---
 
-## Quick Start
+## Reproduce the submission (≈ 15 minutes, offline)
+
+This repo contains **BOWman**, our submission. The decision pipeline is deterministic Python
+(standard library only); the two LLM ports (vision on 16 images, message operations on 215
+messages) ship with their results in `code/cache/`, so the full run needs **no API key and no
+network** and is byte-identical to the submitted `output.csv`.
+
+```bash
+git clone https://github.com/mauryapg13/bowman.git
+cd bowman
+python3 --version                    # 3.11 or newer; no packages required for the run
+python3 code/main.py                 # ~1 min -> ./output.csv (250 rows, validated before writing)
+shasum -a 256 output.csv             # expected 2c0cf3bf72e3fa429d58742e7e9b6f535835b1251147c18ffee2efe18fe73d2a
+```
+
+Verify it (optional, ~5 min):
+
+```bash
+python3 code/evaluation/score.py     # per-column accuracy + calibration table on the 25 samples
+python3 -m pip install pytest && python3 -m pytest -q tests   # 81 tests
+sh code/determinism.sh               # runs the pipeline twice and compares sha256
+python3 code/evaluation/ablation.py  # layer-by-layer table + negative control
+```
+
+Re-querying the models is optional: copy `.env.example` to `.env`, set `OPENROUTER_API_KEY`
+(default model `z-ai/glm-5.3-flash`) or `ANTHROPIC_API_KEY` (`pip install -r code/requirements.txt`),
+and bump `PROMPT_VERSION` in `code/ports/ops.py` or `code/ports/vision.py` to invalidate a cache.
+Token usage of the final run: `code/evaluation/usage_report.md`.
+
+Where to read next: [`code/README.md`](./code/README.md) (architecture, ablation, limitations),
+[`docs/ruleset.md`](./docs/ruleset.md) (decoded decision rules with counts on the 25 samples),
+[`docs/v1_log.md`](./docs/v1_log.md) (every experiment, kept or reverted).
+
+---
+
+## Quick Start (starter instructions)
 
 Clone the repository and move into the project directory:
 
