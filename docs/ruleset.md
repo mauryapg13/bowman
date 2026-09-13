@@ -4,7 +4,7 @@ Written 2026-09-13 (branch `feat/ruleset`). Premise given by the organizers: the
 `dataset/sample_requests.csv` are the deterministic output of their own procedure over the same files.
 Method: every rule is stated first, then counted on all 25 rows (rows fixed / broken / unchanged).
 Scores are from `python3 code/evaluation/score.py`; "exact" means to the cent, "tol" means score.py's
-0.5 % tolerance. Experiments live in `scratch/` (gitignored) and are indexed in `docs/v1_log.md` #32–#38.
+0.5 % tolerance. Experiments live in `scratch/` (gitignored) and are indexed in `docs/v1_log.md` #32–#39.
 
 ## 0. Headline
 
@@ -135,7 +135,7 @@ and only the base amounts differ.
 | 05 | ZAR | +366 (−1.1 %) | 27 | yes | ≈ 2σ of a 27-item sum; same sign as 13 |
 | 06 | EUR | −6 (+1.1 %) | 6 | yes | needs one dining (cad 7) before day 10 → first day ≥ 4; conflicts with 04 |
 | 07 | INR | −1,083 (+2.8 %) | 4 | yes | 4 items, 2.7σ; no single item explains it |
-| 10 | INR | +25.6 k (−5 %) | 36 | **no** | "payout still pending" message; which of four gig streams the key drops is not in the text |
+| 10 | INR | +25.6 k (−5 %) | 36 | **no** | the key's extra outflow is exactly one more groceries + transport + dining (25,666 vs 25,612) — the three items a 90-day window places on day 89; but 08/12/13 need the day-87 bill excluded, and neither a 90-day window, a point check nor a look-ahead window fits all four (v1_log #39) |
 | 11 | IDR | −238 k (+1.4 %) | 5 | yes | noise; but it decides `reduce dining + pay today` vs `wait` |
 | 13 | EUR | +15 (−1.4 %) | 30 | yes | exactly −15.00 over 30 items |
 | 14 | EUR | +21 (−1.9 %) | 5 | yes | noise |
@@ -168,6 +168,7 @@ Ruled out this session, each counted on the 25 (v1_log #32–#37):
 - **A different first day** for the restart: 04 needs ≤ 3, 06 needs ≥ 4, 24 wants ≤ 3 with one more
   item still missing; no single value fits (v1 #23 stands).
 - **Shared noise across streams** (G5): none, so the base amounts cannot be solved exactly.
+- **Earliest date as a point check / look-ahead window** (v1_log #39): earliest 23 → 11/25 for the point check; look-ahead K = 30–75 days never beats the full suffix check. The key's `wait` dates are paydays whose following month must stay above the floor.
 
 What would decode the rest: nothing inside `dataset/`. The base amounts and the generator's own
 forward schedule for the three schedule-mismatch rows (04, 10, 17) are not in the files.
