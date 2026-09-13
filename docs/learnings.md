@@ -102,6 +102,9 @@ file is the *why* and the *gotchas*. Append, never rewrite history; date each en
 - **Variable-spend amounts are i.i.d. noise** (800 streams: lag-1 autocorrelation −0.08, no trend,
   every predictor at the ~15% floor, mean/median best). Figures: `docs/why_variable_spend_is_noise.png`,
   `docs/sample_curves.png`. No "prediction factor" can help; don't build one.
+- **The key's stream estimator is round(mean with min and max dropped)**, constant series exact.
+  Doubles the exact safe amounts (5 → 10) and lands request_08 on 284.57 to the cent. Plain mean is
+  outlier-sensitive (user_17's bulk grocery image), median never matches the integer totals.
 - **The key's outflow totals are integers on 12/20 sample rows** (EUR/USD users included), while
   every fixed bill and median in our streams carries cents. The key rounds its predicted amounts
   somewhere we don't; rounding our medians (1/10/100 units) changes nothing, so the rounding is

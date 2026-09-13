@@ -29,7 +29,9 @@ Baseline (MVP, docs/mvp_results.md): cat 64%, Δ 250,286.
 
 | 19 | rounding: predicted variable amounts rounded to 1 / 10 / 100 units per currency (also all streams) | 72% | 87.9k | **no change** | user's observation is real though: the key's outflow-to-trough is an exact integer on 12/20 rows (157.00, 452.00, 624.00, 568.00, 487.00, 1,134.00, 140,430.00, 38,775.00, 13,996,350.00 …) while our streams carry cents — the key rounds *something* we don't. Integer decompositions of those totals are non-unique (too many count×amount combos), so the exact rule is not recoverable from 20 rows. Open lead for V2 |
 
-## Open misses after #19 (see score.py output)
+| 20 | **stream amount = round(mean with the single min and max dropped)**; constant series exact | 72% | **71,603** | yes | found by the user's "they are rounding" lead: `amount_safe_to_pay` exact 5 → **10/25** (01 02 08 09 16 17 18 20 22 23; request_08 lands on 284.57 to the cent); mean abs safe error 65k → 52k; categoricals 72% (07 gained, 17 lost — 17 is a borderline installment). Plain round(mean) gives 7 exact / 76% but is outlier-sensitive (user_17's bulk purchase); drop-max-only 6; drop-2 6; median variants 5–6 |
+
+## Open misses after #20 (see score.py output)
 
 - request_05: ended payroll cut too early — our min 7,777 vs key 13,837 (key still counts one more occurrence or cuts later expenses).
 - after #13 the remaining residuals are: 02 −130k, 03 +16k, 04 −176k, 07 −8.9k, 11 −389k, 19 −3.4k, 25 −645k (all IDR/INR users with large weekly streams) and 06 −58, 21 +59, 23 +66 — a few percent of the pre-payday variable spend; no estimator variant fixed them (#9, #11, #14).

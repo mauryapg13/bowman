@@ -103,6 +103,20 @@ def _group_key(e: Event) -> tuple[str, str, str]:
     return (e.direction, e.category, desc)
 
 
+def stream_amount(amounts: list[float]) -> float:
+    """Forecast amount for a stream (spec §4.2, v1_log #20). A constant series is
+    exact. A varying series is the mean with the single highest and lowest
+    purchases dropped, rounded to whole currency units — the estimator that
+    reproduces the answer key's integer outflow totals and lands sample
+    request_08 to the cent (284.57); plain median/mean do not."""
+    if max(amounts) - min(amounts) < 1e-9:
+        return float(amounts[0])
+    b = sorted(amounts)
+    if len(b) > 4:
+        b = b[1:-1]
+    return float(round(sum(b) / len(b)))
+
+
 def _median_gap(dates: list[date]) -> float:
     gaps = [(b - a).days for a, b in zip(dates, dates[1:])]
     return float(median(gaps))
@@ -123,7 +137,7 @@ def _make_stream(user_id: str, ordinal: int, key: tuple[str, str, str], evs: lis
         category=key[1],
         description=None if key[1] in CATEGORY_LEVEL else key[2],
         cadence_days=int(round(gap)),
-        amount=float(median(e.amount for e in evs)),     # type: ignore[arg-type]  (amount is not None: included)
+        amount=stream_amount([e.amount for e in evs]),      # type: ignore[list-item]  (amount is not None: included)
         anchor=cash_date(latest),
         occurrences=tuple(Occurrence(e.event_id, cash_date(e), e.amount) for e in evs),   # type: ignore[arg-type]
         flexibility=latest.flexibility,
