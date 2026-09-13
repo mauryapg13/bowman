@@ -78,10 +78,11 @@ def build_ports(config: PL.RunConfig) -> Ports:
         from ports.vision import VisionPort
         vision = VisionPort()
     if config.ops:
-        from ports import llm as LLM
-        if LLM.provider():
-            from ports.ops import OpsPort
-            ops = OpsPort()
+        # The ops port is always built: every message result is committed under code/cache/, so a
+        # checkout without API keys reproduces output.csv from the cache (0 live calls). A cache miss
+        # with no provider degrades to "no operation" for that message (OpsPort._call_llm).
+        from ports.ops import OpsPort
+        ops = OpsPort()
     return Ports(vision=vision, ops=ops)
 
 
