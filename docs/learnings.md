@@ -89,6 +89,16 @@ file is the *why* and the *gotchas*. Append, never rewrite history; date each en
 - The `Weekly app earnings`-style gig income + "payout still pending" message (request_10):
   the key drops ~one stream's worth; not identifiable from the text — left as a known miss.
 
+- **Cash moves on `settlement_date`** — recurrence anchors, cadence and placements must use
+  it (request_07: salary event 15th, settled 23rd; key's earliest date is the 23rd).
+- **The key's variable-spend estimator is not median/mean/last/last-N × median-gap/mean-gap/7/14**
+  (30-combo grid, ≤2 of 20 rows exact). Residuals of a few percent on ~6 users remain; exactness
+  on `amount_safe_to_pay` is not reachable by tuning this family. Don't spend more time there.
+- **A cadence of 0 days loops the ledger forever** — guard `cadence_days >= 1` (hit during the grid
+  with a last-gap rule on same-day occurrences).
+- **Ops cache keys must not depend on the forecast estimator**: the model's stream view uses the
+  median of occurrences and the median gap, so experiments don't trigger live calls.
+
 ## Engineering gotchas
 
 - The starter shipped an **empty `code/evaluation/main.py`**; with `code/evaluation`

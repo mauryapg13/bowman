@@ -14,6 +14,13 @@ from load import Message, convert, fx_key, FxRateMissing
 from ports.ops import Operation
 from recurrence import Amendment, OneOff, Stream
 from ledger import _add_months
+from statistics import median as _median
+
+
+def _median_gap(s: Stream) -> int:
+    d = [o.date for o in s.occurrences]
+    gaps = [(b - a).days for a, b in zip(d, d[1:])]
+    return int(round(_median(gaps))) if gaps else s.cadence_days
 
 
 def rate_on_or_before(amount: float, currency: str, home: str, on: date, fx: dict[str, float]) -> tuple[float, date | None]:
@@ -54,8 +61,11 @@ def apply(streams: tuple[Stream, ...], oneoffs: tuple[OneOff, ...], events: list
             e = by_event[m.related_event_id]
             rel = {"event_id": e.event_id, "description": e.description, "amount": e.amount, "date": str(e.settlement_date or e.event_date),
                    "status": e.status, "direction": e.direction, "included": e.included}
+        # The view the model sees must not depend on the forecast estimator (or every estimator
+        # experiment would invalidate the ops cache): amount = median of recorded occurrences.
         stream_view = [{"stream_id": s.stream_id, "category": s.category, "description": s.description, "direction": s.direction,
-                        "amount": round(s.amount, 2), "cadence_days": s.cadence_days} for s in by_stream.values()]
+                        "amount": round(_median([o.amount for o in s.occurrences]) if s.occurrences else s.amount, 2),
+                        "cadence_days": _median_gap(s)} for s in by_stream.values()]
         for op in ops_port.operations(m.message_id, m.message_text, rel, stream_view):
             if op.op == "none":
                 applied.append(op)

@@ -25,6 +25,16 @@ from statistics import median
 from inclusion import Event
 
 CATEGORY_LEVEL = frozenset({"groceries", "transport", "dining"})
+
+
+def cash_date(e: Event) -> date:
+    """Cash moves on settlement_date (AGENTS.md §6.3 'count confirmed salary on its
+    settlement date'); event_date is only a fallback for rows without one."""
+    return e.settlement_date or e.event_date
+
+
+def _id_num(event_id: str) -> int:
+    return int(event_id.rsplit("_", 1)[1])
 MIN_OCCURRENCES = 3
 GAP_MIN, GAP_MAX = 5, 35
 ABSORB_TOLERANCE_DAYS = 10
@@ -99,10 +109,10 @@ def _median_gap(dates: list[date]) -> float:
 
 
 def _make_stream(user_id: str, ordinal: int, key: tuple[str, str, str], evs: list[Event]) -> Stream | None:
-    evs = sorted(evs, key=lambda e: (e.event_date, e.event_id))
+    evs = sorted(evs, key=lambda e: (cash_date(e), _id_num(e.event_id)))     # numeric id: event_84 < event_102
     if len(evs) < MIN_OCCURRENCES:
         return None
-    gap = _median_gap([e.event_date for e in evs])
+    gap = _median_gap([cash_date(e) for e in evs])
     if not (GAP_MIN <= gap <= GAP_MAX):
         return None
     latest = evs[-1]
@@ -114,8 +124,8 @@ def _make_stream(user_id: str, ordinal: int, key: tuple[str, str, str], evs: lis
         description=None if key[1] in CATEGORY_LEVEL else key[2],
         cadence_days=int(round(gap)),
         amount=float(median(e.amount for e in evs)),     # type: ignore[arg-type]  (amount is not None: included)
-        anchor=latest.event_date,
-        occurrences=tuple(Occurrence(e.event_id, e.event_date, e.amount) for e in evs),   # type: ignore[arg-type]
+        anchor=cash_date(latest),
+        occurrences=tuple(Occurrence(e.event_id, cash_date(e), e.amount) for e in evs),   # type: ignore[arg-type]
         flexibility=latest.flexibility,
         minimum_allowed_amount=latest.minimum_allowed_amount,
         latest_event_id=latest.event_id,
@@ -138,7 +148,7 @@ def _absorb(streams: list[Stream], leftovers: list[Event]) -> tuple[list[Stream]
         fits = []
         for i in by_cat.get((e.direction, e.category), []):
             s = streams[i]
-            delta = (e.event_date - s.anchor).days
+            delta = (cash_date(e) - s.anchor).days
             if s.cadence_days - ABSORB_TOLERANCE_DAYS <= delta <= s.cadence_days + ABSORB_TOLERANCE_DAYS:
                 fits.append((abs(e.amount - s.amount) / max(s.amount, 1e-9), i, delta))     # type: ignore[operator]
         if not fits:
@@ -148,8 +158,8 @@ def _absorb(streams: list[Stream], leftovers: list[Event]) -> tuple[list[Stream]
         s = streams[i]
         streams[i] = replace(
             s,
-            anchor=e.event_date,
-            occurrences=s.occurrences + (Occurrence(e.event_id, e.event_date, e.amount),),   # type: ignore[arg-type]
+            anchor=cash_date(e),
+            occurrences=s.occurrences + (Occurrence(e.event_id, cash_date(e), e.amount),),   # type: ignore[arg-type]
             latest_event_id=e.event_id,
             provenance=s.provenance + (f"recurrence:absorbed scheduled {e.event_id} ({e.description!r}) at +{delta}d",),
         )
@@ -215,7 +225,7 @@ def detect(events: list[Event] | tuple[Event, ...], user_id: str) -> Detection:
     leftovers = [e for e in leftovers if e.event_id not in absorbed_ids]
 
     streams, leftovers = _absorb(streams, leftovers)
-    last_settled = max((e.event_date for e in included if e.status == "settled"), default=None)
+    last_settled = max((cash_date(e) for e in included if e.status == "settled"), default=None)
     streams = _terminate_stale(streams, last_settled)
 
     # Confirmed salary with no detected salary stream (spec §4.2, request_01): a `scheduled`
@@ -233,14 +243,14 @@ def detect(events: list[Event] | tuple[Event, ...], user_id: str) -> Detection:
         streams.append(Stream(
             stream_id=f"stream_{user_id}_confirmed{len(streams) + 1}", user_id=user_id, direction="credit",
             category="salary", description=e.description, cadence_days=31, amount=e.amount,      # type: ignore[arg-type]
-            anchor=e.event_date, occurrences=(Occurrence(e.event_id, e.event_date, e.amount),),   # type: ignore[arg-type]
+            anchor=cash_date(e), occurrences=(Occurrence(e.event_id, cash_date(e), e.amount),),   # type: ignore[arg-type]
             flexibility=e.flexibility, minimum_allowed_amount=None, latest_event_id=e.event_id,
             provenance=(f"recurrence:confirmed scheduled salary {e.event_id} promoted to monthly stream",),
         ))
 
     oneoffs = tuple(
         OneOff(e.event_id, e.user_id, e.direction, e.amount, e.settlement_date, e.category, e.status)   # type: ignore[arg-type]
-        for e in sorted(leftovers, key=lambda e: (e.settlement_date, e.event_id))
+        for e in sorted(leftovers, key=lambda e: (cash_date(e), _id_num(e.event_id)))
     )
     zero_income = not any(s.direction == "credit" for s in streams) and \
                   not any(o.direction == "credit" and o.status == "scheduled" for o in oneoffs)

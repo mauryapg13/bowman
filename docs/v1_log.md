@@ -15,7 +15,11 @@ Baseline (MVP, docs/mvp_results.md): cat 64%, Δ 250,286.
 | 8 | stale-stream termination: expected next occurrence > 7 days before last settled event ⇒ ended | **76%** | 248,708 | yes | request_05 now `not_affordable` (Final employer payroll); request_13 second income ends |
 | 9 | amount estimator variants for streams (mean / last-3 mean / last-3 median / max / latest) | 68–72% | 234k–274k | **reverted** | mean: +2 rows within 1% but same cat; last-3 mean: cat −4pts; max: cat 48%. Median kept |
 
-## Open misses after #8 (see score.py output)
+| 10 | stream occurrences/anchors use `settlement_date` (cash date), numeric event-id sort | 72% | 248,414 | yes | contract (AGENTS §6.3) and key agree: request_07's salary settles on the 23rd and the key's earliest date is 10-23. Categoricals −4 pts from request_07 alone (−1,669 pessimistic near day 70–78) |
+| 11 | grid search: variable-spend amount {median, mean, last, mean-last-4, median-last-6, max-last-4} × cadence {median gap, mean gap, last gap, 7, 14} — 30 combos | ≤2/20 exact | 374–1,285 on the six small rows | **no change** | no combination zeroes more than 2 rows; (mean, median gap) ≈ (median, median gap); the key's estimator is outside this family. Stopped chasing `amount_safe_to_pay` exactness here |
+| 12 | monthly-total-as-monthly-stream, description-level grouping (3 bands), min-occurrences 2 | 0–1/20 | 287k–850k | **reverted** | all far worse |
+
+## Open misses after #12 (see score.py output)
 
 - request_05: ended payroll cut too early — our min 7,777 vs key 13,837 (key still counts one more occurrence or cuts later expenses).
 - request_06 (−86), request_21 (+185), request_13 (+705), request_23 (−745): variable-spend estimation differences; no estimator variant fixed them without hurting others (#9).

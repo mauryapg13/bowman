@@ -102,6 +102,8 @@ def _nth_date(stream: Stream, n: int) -> date:
 
 
 def _stream_placements(stream: Stream, start: date) -> list[Placement]:
+    if stream.cadence_days < 1:
+        raise ValueError(f"{stream.stream_id}: cadence_days must be >= 1")   # a 0 cadence would loop forever
     out: list[Placement] = []
     recorded_days: set[int] = set()
     last_recorded_day = -10**9

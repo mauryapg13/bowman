@@ -132,6 +132,38 @@ def render(rep: ScoreReport) -> str:
     return "\n".join(out)
 
 
+def trace(decisions: list[M.Decision], answers: tuple[L.SampleAnswer, ...], ds: L.Dataset, only: set[str] | None = None) -> str:
+    """Per-sample placement trace around the binding minimum (V1-6 residual tracing)."""
+    import ledger as LG
+    from datetime import timedelta
+    by_id = {a.request_id: a for a in answers}
+    reqs = {r.request_id: r for r in ds.sample_requests}
+    out = []
+    for d in decisions:
+        if only and d.request_id not in only:
+            continue
+        a, req = by_id[d.request_id], reqs[d.request_id]
+        p = ds.profiles[req.user_id]
+        led = LG.forecast(d.diagnostics.streams, d.diagnostics.oneoffs, req.request_date, p.current_available_balance, p.minimum_balance_to_keep)
+        mn = min(range(LG.N), key=lambda i: led.balance[i])
+        key = float(a.row["amount_safe_to_pay"]); capped = key >= req.requested_amount - 1e-9
+        exp = None if capped else key + p.minimum_balance_to_keep
+        out.append(f"\n=== {d.request_id} {req.user_id} {p.home_currency}  request {req.request_date}  deadline {req.desired_completion_date}  requested {req.requested_amount:,.2f}")
+        out.append(f"  opening {p.current_available_balance:,.2f}  floor {p.minimum_balance_to_keep:,.2f}  min {led.balance[mn]:,.2f} on day {mn} ({req.request_date + timedelta(days=mn)})")
+        out.append(f"  capacity {d.diagnostics.capacity.amount_safe_to_pay:,.2f} / key {key:,.2f}   expected_min {'capped' if exp is None else f'{exp:,.2f}'}   delta {'' if exp is None else f'{led.balance[mn] - exp:+,.2f}'}")
+        for o in d.diagnostics.operations:
+            if o.op != "none":
+                out.append(f"  op {o.op} {o.target_id} amount={o.new_amount} {o.currency} eff={o.effective_date} ended={o.ended} once={o.one_occurrence_only}")
+        for s in sorted(d.diagnostics.streams, key=lambda s: (s.direction, s.category)):
+            am = "".join(f" [{x.op}@{x.effective_date}{' ended' if x.ended else (f' ->{x.new_amount:.2f}' if x.new_amount is not None else '')}{' once' if x.one_occurrence_only else ''}]" for x in s.amendments)
+            out.append(f"  {s.direction:6} {s.category:18} {str(s.description)[:26]:26} cad={s.cadence_days:2} amt={s.amount:12,.2f} anchor={s.anchor} n={len(s.occurrences)}{am}")
+        fut = [o for o in d.diagnostics.oneoffs if o.date >= req.request_date]
+        if fut:
+            out.append("  one-offs: " + ", ".join(f"{o.event_id} {o.direction[0]} {o.amount:,.2f} {o.date} {o.status}" for o in fut))
+        out.append("  placements to the minimum: " + ", ".join(f"d{pl.day} {'+' if pl.direction == 'credit' else '-'}{pl.amount:,.2f} {pl.source_id.replace('stream_' + req.user_id + '_', 's')}" for pl in led.placements if pl.day <= mn))
+    return "\n".join(out)
+
+
 def to_json(rep: ScoreReport) -> dict:
     return {"per_column": rep.per_column, "exact_match_categorical": rep.exact_match_categorical,
             "safe_abs_err_mean": rep.safe_abs_err_mean, "safe_within_half_pct": rep.safe_within_half_pct,
@@ -143,11 +175,14 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--json", help="write the report as JSON to this path")
     ap.add_argument("--config", default="full", choices=["mvp", "full"])
+    ap.add_argument("--trace", nargs="*", help="print placement traces (optionally only these request_ids)")
     args = ap.parse_args(argv)
     ds = L.load(M.REPO_ROOT / "dataset")
     decisions = M.run(requests=ds.sample_requests, config=PL.FULL if args.config == "full" else PL.MVP, ds=ds)
     rep = score(decisions, ds.sample_answers)
     print(render(rep))
+    if args.trace is not None:
+        print(trace(decisions, ds.sample_answers, ds, set(args.trace) or None))
     if args.json:
         Path(args.json).write_text(json.dumps(to_json(rep), indent=2) + "\n")
     return 0
