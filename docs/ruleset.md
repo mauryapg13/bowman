@@ -30,8 +30,8 @@ which the history only lets us estimate to a few percent. That boundary is state
 These are facts about the dataset, not about our pipeline. They are what a judge should check first.
 
 - **G1. Amount noise is uniform and multiplicative.** For every varying stream, `amount / midrange`
-  is flat: category-level spend (groceries / transport / dining) fills `[0.72, 1.28]` with a hard cap
-  `max/min ≤ 1.775` on all 822 streams with n ≥ 20; monthly bills (utilities, shopping,
+  is flat: category-level spend (groceries / transport / dining, 822 streams) fills `[0.72, 1.28]` with a
+  hard cap `max/min ≤ 1.775` in every n ≥ 15 bin (bulk-purchase outliers aside); monthly bills (utilities, shopping,
   entertainment, healthcare) fill `[0.88, 1.12]` (`max/min ≤ 1.27`, 676 streams). No tail beyond
   the bounds except bulk-purchase outliers. Histograms in `scratch/noise_shape3.py`.
 - **G2. Base amounts sit on a per-currency grid.** Every constant stream is `integer × unit` with
