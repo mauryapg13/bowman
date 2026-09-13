@@ -155,3 +155,12 @@ def test_variable_streams_restart_at_the_request():
                  occ + (Occurrence("event_2", START + timedelta(days=4), 50.0),), "fixed", None, "event_2")
     led = LG.forecast([fut], [], START, 1000, 0)
     assert days_of(led, "recorded") == [4] and days_of(led, "predicted")[:2] == [11, 18]
+
+
+def test_phase_reset_never_touches_income_streams():
+    """Regression: a message-created salary stream also has description None; it must
+    keep its confirmed date, not be pulled to day 3."""
+    from recurrence import Stream
+    salary = Stream("stream_user_9_msg1", "user_9", "credit", "salary", None, 31, 2717.0, date(2025, 7, 15), (), "fixed", None, "")
+    led = LG.forecast([salary], [], date(2025, 8, 4), 1000, 0)
+    assert days_of(led, "predicted", "stream_user_9_msg1")[:2] == [11, 42]

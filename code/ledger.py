@@ -143,8 +143,8 @@ def _phase_reset(stream: Stream, start: date, first_day: int | None = VARIABLE_F
     the mean calibration error (248k -> 88k) and doubles the rows within 2%, with
     no change to the categorical columns. Recorded occurrences on/after the request
     are kept; prediction restarts from the request date."""
-    if stream.description is not None or first_day is None:
-        return stream
+    if first_day is None or stream.direction != "debit" or stream.description is not None:
+        return stream                      # only category-level spend streams; never income (start_stream salaries also have description None)
     first = min(first_day, stream.cadence_days)
     future = tuple(o for o in stream.occurrences if o.date >= start)
     if future:                                         # a recorded occurrence after the request: keep the real anchor
