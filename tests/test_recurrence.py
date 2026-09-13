@@ -91,11 +91,37 @@ def test_scheduled_salary_is_absorbed_not_double_counted(ds):
     assert any(p.startswith("recurrence:absorbed") for p in salary[0].provenance)
 
 
-def test_no_stream_means_scheduled_salary_stays_a_oneoff(ds):
-    d = detect(ds, "user_01")   # only 1 settled salary + 1 scheduled
-    assert not any(s.category == "salary" for s in d.streams)
-    assert any(o.event_id == "event_103" and o.status == "scheduled" for o in d.oneoffs)
+def test_confirmed_salary_without_a_stream_is_promoted_to_monthly(ds):
+    """user_01: one prorated salary + one scheduled 'Next confirmed salary' and no
+    salary stream -> the confirmed row becomes a monthly stream anchored on itself
+    (spec §4.2 / AGENTS.md §6.3 'count confirmed salary'). Sample request_01 keys
+    affordable_now, which is impossible without income after 15 March."""
+    d = detect(ds, "user_01")
+    sal = [s for s in d.streams if s.category == "salary"]
+    assert len(sal) == 1 and sal[0].latest_event_id == "event_103" and sal[0].cadence_days == 31
+    assert sal[0].occurrences[0].event_id == "event_103" and sal[0].anchor == date(2024, 3, 15)
+    assert not any(o.event_id == "event_103" for o in d.oneoffs)
     assert d.zero_income is False
+
+
+def test_scheduled_salary_joins_the_closest_amount_stream(ds):
+    """user_13 has two salary streams; the scheduled row must join exactly one (the
+    one with the same amount), never be double counted as a one-off."""
+    d = detect(ds, "user_13")
+    sal = {s.description: s for s in d.streams if s.category == "salary"}
+    assert sal["Primary household salary"].latest_event_id == "event_1161"
+    assert not any(o.event_id == "event_1161" for o in d.oneoffs)
+
+
+def test_stale_stream_is_ended(ds):
+    """user_05: payroll x4 then 'Final employer payroll' (different description) —
+    the expected October payroll is missing while data runs on -> ended."""
+    d = detect(ds, "user_05")
+    pay = next(s for s in d.streams if s.description == "Payroll credit")
+    assert any(a.ended for a in pay.amendments)
+    d13 = detect(ds, "user_13")
+    second = next(s for s in d13.streams if s.description == "Second household income")
+    assert any(a.ended for a in second.amendments)
 
 
 def test_zero_income_flag_and_no_invention(ds):
