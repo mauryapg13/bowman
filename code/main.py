@@ -122,6 +122,7 @@ def run(dataset_dir: Path | str = REPO_ROOT / "dataset", requests: tuple[L.Reque
         config: PL.RunConfig = PL.MVP, ds: L.Dataset | None = None) -> list[Decision]:
     ds = ds or L.load(dataset_dir)
     reqs = ds.requests if requests is None else requests
+    LG.configure(config.horizon_days)
     ports = build_ports(config)
     return [decide(ds, r, config, ports) for r in reqs]
 

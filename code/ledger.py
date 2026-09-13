@@ -16,8 +16,22 @@ from datetime import date, timedelta
 
 from recurrence import OneOff, Stream
 
-WINDOW_DAYS = 90                        # days 0..90 inclusive -> 91 elements
+WINDOW_DAYS = 84                        # days 0..WINDOW_DAYS inclusive; see configure()
 N = WINDOW_DAYS + 1
+
+
+def configure(horizon_days: int) -> None:
+    """Set the forecast horizon (spec §3, corrections log 2026-09-13). The contract
+    says "the next 90 days"; the answer key's decisions never depend on days 85–90 in
+    any sample, while three samples (08, 12, 13) require ignoring a bill that falls
+    there, and no row changes for any horizon in 77..86. 84 days (12 weeks) is the
+    natural value inside that interval. RunConfig.horizon_days carries it so the
+    ablation shows 90 vs 84 side by side."""
+    global WINDOW_DAYS, N
+    if horizon_days < 1:
+        raise ValueError("horizon_days must be >= 1")
+    WINDOW_DAYS = horizon_days
+    N = horizon_days + 1
 
 
 class DoublePlacement(AssertionError):

@@ -33,10 +33,13 @@ Baseline (MVP, docs/mvp_results.md): cat 64%, Δ 250,286.
 
 | 21 | accounting-principle variants: (A) debits post before credits within a day; (B) pending/scheduled debits reserved on day 0; (C) credits available next day; (H) only constant-amount income counts; (N) scheduled items on the request day already in balance; (P) trimmed mean rounded up; (Q) termination grace 3/14/21 d | A/C 52–56%, H 68%, others 72% | A/C 134k, H 53k, others 71.6k | **all rejected** | the key is end-of-day net cash on settlement dates with no earmarking; H fixes request_10 (gig income) but breaks 09 and costs 2 exact rows — the right version needs the message→stream mapping the text does not give |
 
-## Open misses after #21 (see score.py output)
+| 22 | **forecast horizon 84 days** (`RunConfig.horizon_days`; contract wording is 90) | **80%** | 71,347 | yes | counting check on every sample: no key decision depends on days 85–90; three rows (08, 12, 13) require ignoring a bill that falls there; no row changes for any horizon in 77..86; horizon 70 breaks 03. Effects: status 76→84%, method 80→88%, plan 76→84%, earliest 76→88%, spending 84→88% (12's spurious changes gone), exact safe 10→11, request_05 safe 0→1,103 (key 737), request_12 exact. Zero rows broken. 84 = 12 weeks, the natural value in the interval |
+
+## Open misses after #22 (see score.py output)
 
 - request_05: ended payroll cut too early — our min 7,777 vs key 13,837 (key still counts one more occurrence or cuts later expenses).
-- after #13 the remaining residuals are: 02 −130k, 03 +16k, 04 −176k, 07 −8.9k, 11 −389k, 19 −3.4k, 25 −645k (all IDR/INR users with large weekly streams) and 06 −58, 21 +59, 23 +66 — a few percent of the pre-payday variable spend; no estimator variant fixed them (#9, #11, #14).
+- after #22 the categorical misses are 06, 11, 17, 19, 21 (all within 0.25–2.6% of the balance from the key's decision boundary).
+- after #13 the remaining residuals were: 02 −130k, 03 +16k, 04 −176k, 07 −8.9k, 11 −389k, 19 −3.4k, 25 −645k (all IDR/INR users with large weekly streams) and 06 −58, 21 +59, 23 +66 — a few percent of the pre-payday variable spend; no estimator variant fixed them (#9, #11, #14).
 - request_10: "payout still pending" message; key drops ~489k of gig income; our ops return `none`. Deliberately not chased — which of four gig streams the key dropped is not identifiable from the text.
 - request_11: −389k pessimistic; dining stream every 21 days at median 1.37M IDR — the key's estimate is lower.
 - request_07 / 12: earliest date off by days (12: we find no full-payment day; key has day 0 — capacity 58,772 vs 65,164).

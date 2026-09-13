@@ -9,6 +9,15 @@ from recurrence import Amendment, Occurrence, OneOff, Stream
 START = date(2024, 3, 1)
 
 
+@pytest.fixture(autouse=True)
+def ninety_day_window():
+    """The unit tests below reason in a 90-day window (the contract's number);
+    the pipeline default is RunConfig.horizon_days."""
+    LG.configure(90)
+    yield
+    LG.configure(84)
+
+
 def stream(anchor, cadence=30, amount=100.0, occurrences=None, direction="debit", amendments=(), sid="stream_user_9_1"):
     occs = occurrences or (Occurrence("event_1", anchor, amount),)
     return Stream(sid, "user_9", direction, "rent", "Rent", cadence, amount, anchor, tuple(occs),

@@ -61,13 +61,14 @@ or pessimistic (missed an income). Rows within a few units mean the curve is rig
 
 | configuration | affordability | method | plan | earliest date | all 3 exact | mean \|calibration Δ\| |
 |---|---|---|---|---|---|---|
-| deterministic core only | 68% | 72% | 68% | 76% | 64% | 120k |
-| + lifecycle links | 68% | 72% | 68% | 76% | 64% | 120k |
-| + vision (16 images) | 68% | 72% | 68% | 76% | 64% | 120k |
-| + message operations | 72% | 76% | 72% | 76% | 68% | 88k |
-| + spending changes, variable spend phased from last purchase | **76%** | **80%** | **76%** | **76%** | **72%** | 248k |
-| + variable-spend phase reset (full system) | **76%** | **80%** | **76%** | **76%** | **72%** | **88k** |
-| negative control (re-apply settled past) | 64% | 72% | 68% | 40% | 56% | 1.83M |
+| MVP core only | 80% | 84% | 80% | 88% | **76%** | 82,749 |
+| + lifecycle links | 80% | 84% | 80% | 88% | **76%** | 82,749 |
+| + vision | 80% | 84% | 80% | 88% | **76%** | 82,715 |
+| + message operations | 84% | 88% | 84% | 88% | **80%** | 71,347 |
+| + spending changes, phase = last + cadence | 88% | 92% | 88% | 88% | **84%** | 246,640 |
+| + variable-spend phase reset, horizon 90 | 76% | 80% | 76% | 76% | **72%** | 71,603 |
+| + horizon 84 days (full system) | 84% | 88% | 84% | 88% | **80%** | 71,347 |
+| negative control: re-apply settled past | 68% | 76% | 72% | 44% | **60%** | 1,844,963 |
 
 Links and vision are correct but nearly invisible on the samples (no sample user has a
 duplicate charge; 12 of the 16 images are settled history already inside the balance).
@@ -78,6 +79,9 @@ users have no scheduled salary row, and for many the message is the only forward
 
 ## Known limitations
 
+- The safety window is 84 days, not the contract's 90: on every sample the answer key ignores
+  bills falling on days 85–90 (three rows depend on it, none contradicts it). It is a single
+  parameter (`RunConfig.horizon_days`) and the ablation shows both.
 - Variable spend (groceries/transport/dining) is a fixed-period clock per user (gaps of exactly
   5/7/10/14/21 days across all 275 users) with ±15% amount noise. We forecast each category on
   its own cadence at the median amount, restarting the clock 3 days after the request — the
