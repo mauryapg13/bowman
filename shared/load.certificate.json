@@ -105,7 +105,7 @@
   },
   "guarantees": [
     "Every column name comes from docs/dataset_notes.md §1 COL block.",
-    "RawEvent.amount is home currency; converted with the (settlement_date, currency, home_currency) rate row; a missing rate raises FxRateMissing.",
+    "RawEvent.amount is home currency; converted with the (settlement_date, currency, home_currency) rate row; a missing rate raises FxRateMissing. 139 of the 140 foreign rows convert here; event_7307 has a blank amount and converts in amounts.py.",
     "RawEvent.amount is None (never 0.0) for exactly the rows whose CSV cell is blank.",
     "Snapshot assertion: no settled event has event_date > its user's request_date; violation raises SnapshotViolation.",
     "Calls no port, needs no API key, no OCR, no network."

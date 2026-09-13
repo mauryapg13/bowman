@@ -1,0 +1,242 @@
+{
+  "per_column": {
+    "amount_safe_to_pay": 0.16,
+    "affordability_status": 0.68,
+    "recommended_payment_method": 0.72,
+    "payment_plan": 0.68,
+    "earliest_date_for_full_payment": 0.68,
+    "spending_changes_needed": 0.88,
+    "decision_explanation": 0.52
+  },
+  "exact_match_categorical": 0.64,
+  "safe_abs_err_mean": 200646.35280000002,
+  "safe_within_half_pct": 4,
+  "calibration_mean_abs_delta": 250285.66452380957,
+  "calibration": [
+    {
+      "request_id": "request_01",
+      "expected_min": null,
+      "our_min": 27610.795000000035,
+      "delta": null,
+      "capped": true,
+      "safe_ours": 9610.8,
+      "safe_key": 25256.0
+    },
+    {
+      "request_id": "request_02",
+      "expected_min": 46387539.2,
+      "our_min": 47359323.11,
+      "delta": 971783.9099999964,
+      "capped": false,
+      "safe_ours": 18200923.11,
+      "safe_key": 17229139.2
+    },
+    {
+      "request_id": "request_03",
+      "expected_min": 3541700.0,
+      "our_min": 3641281.9050000003,
+      "delta": 99581.90500000026,
+      "capped": false,
+      "safe_ours": 972581.91,
+      "safe_key": 873000.0
+    },
+    {
+      "request_id": "request_04",
+      "expected_min": 39088400.0,
+      "our_min": 41228918.025000006,
+      "delta": 2140518.025000006,
+      "capped": false,
+      "safe_ours": 10542318.03,
+      "safe_key": 8401800.0
+    },
+    {
+      "request_id": "request_05",
+      "expected_min": 13837.0,
+      "our_min": 41568.29999999999,
+      "delta": 27731.29999999999,
+      "capped": false,
+      "safe_ours": 15488.0,
+      "safe_key": 737.0
+    },
+    {
+      "request_id": "request_06",
+      "expected_min": 1403.3,
+      "our_min": 1317.3600000000001,
+      "delta": -85.93999999999983,
+      "capped": false,
+      "safe_ours": 517.36,
+      "safe_key": 603.3
+    },
+    {
+      "request_id": "request_07",
+      "expected_min": 180170.56,
+      "our_min": 187960.66,
+      "delta": 7790.100000000006,
+      "capped": false,
+      "safe_ours": 94960.66,
+      "safe_key": 87170.56
+    },
+    {
+      "request_id": "request_08",
+      "expected_min": 1084.57,
+      "our_min": 1091.125,
+      "delta": 6.555000000000064,
+      "capped": false,
+      "safe_ours": 291.12,
+      "safe_key": 284.57
+    },
+    {
+      "request_id": "request_09",
+      "expected_min": null,
+      "our_min": 2069.955,
+      "delta": null,
+      "capped": true,
+      "safe_ours": 166.61,
+      "safe_key": 166.61
+    },
+    {
+      "request_id": "request_10",
+      "expected_min": 238100.0,
+      "our_min": 726840.81,
+      "delta": 488740.81000000006,
+      "capped": false,
+      "safe_ours": 266700.0,
+      "safe_key": 12700.0
+    },
+    {
+      "request_id": "request_11",
+      "expected_min": 46651245.0,
+      "our_min": 46262175.11,
+      "delta": -389069.8900000006,
+      "capped": false,
+      "safe_ours": 12121575.11,
+      "safe_key": 12510645.0
+    },
+    {
+      "request_id": "request_12",
+      "expected_min": null,
+      "our_min": 184006.14500000002,
+      "delta": null,
+      "capped": true,
+      "safe_ours": 65164.0,
+      "safe_key": 65164.0
+    },
+    {
+      "request_id": "request_13",
+      "expected_min": 1733.4,
+      "our_min": 2438.6299999999997,
+      "delta": 705.2299999999996,
+      "capped": false,
+      "safe_ours": 941.6,
+      "safe_key": 433.4
+    },
+    {
+      "request_id": "request_14",
+      "expected_min": 2797.74,
+      "our_min": -1902.8650000000007,
+      "delta": -4700.6050000000005,
+      "capped": false,
+      "safe_ours": 0.0,
+      "safe_key": 597.74
+    },
+    {
+      "request_id": "request_15",
+      "expected_min": 1283.05,
+      "our_min": -2110.16,
+      "delta": -3393.21,
+      "capped": false,
+      "safe_ours": 0.0,
+      "safe_key": 83.05
+    },
+    {
+      "request_id": "request_16",
+      "expected_min": null,
+      "our_min": 362370.0,
+      "delta": null,
+      "capped": true,
+      "safe_ours": 122500.0,
+      "safe_key": 122500.0
+    },
+    {
+      "request_id": "request_17",
+      "expected_min": 409949.57999999996,
+      "our_min": 409854.80999999994,
+      "delta": -94.77000000001863,
+      "capped": false,
+      "safe_ours": 243754.81,
+      "safe_key": 243849.58
+    },
+    {
+      "request_id": "request_18",
+      "expected_min": 1862.0,
+      "our_min": 1951.0250000000003,
+      "delta": 89.02500000000032,
+      "capped": false,
+      "safe_ours": 551.03,
+      "safe_key": 462.0
+    },
+    {
+      "request_id": "request_19",
+      "expected_min": 121620.0,
+      "our_min": 118209.45999999999,
+      "delta": -3410.540000000008,
+      "capped": false,
+      "safe_ours": 25409.46,
+      "safe_key": 28820.0
+    },
+    {
+      "request_id": "request_20",
+      "expected_min": 69900.0,
+      "our_min": 74067.315,
+      "delta": 4167.315000000002,
+      "capped": false,
+      "safe_ours": 9567.32,
+      "safe_key": 5400.0
+    },
+    {
+      "request_id": "request_21",
+      "expected_min": 3343.35,
+      "our_min": 3528.58,
+      "delta": 185.23000000000002,
+      "capped": false,
+      "safe_ours": 1574.4,
+      "safe_key": 1543.35
+    },
+    {
+      "request_id": "request_22",
+      "expected_min": 975.46,
+      "our_min": 965.27,
+      "delta": -10.190000000000055,
+      "capped": false,
+      "safe_ours": 465.27,
+      "safe_key": 475.46
+    },
+    {
+      "request_id": "request_23",
+      "expected_min": 36152.0,
+      "our_min": 35406.78,
+      "delta": -745.2200000000012,
+      "capped": false,
+      "safe_ours": 8406.78,
+      "safe_key": 9152.0
+    },
+    {
+      "request_id": "request_24",
+      "expected_min": 64420.0,
+      "our_min": 67101.53000000001,
+      "delta": 2681.5300000000134,
+      "capped": false,
+      "safe_ours": 16101.53,
+      "safe_key": 13420.0
+    },
+    {
+      "request_id": "request_25",
+      "expected_min": 24804100.0,
+      "our_min": 23693592.345000003,
+      "delta": -1110507.6549999975,
+      "capped": false,
+      "safe_ours": 314492.35,
+      "safe_key": 1425000.0
+    }
+  ]
+}
