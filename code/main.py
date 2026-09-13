@@ -6,12 +6,14 @@ Business rules live in the modules, never here.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import amend as AD
 import amounts as AM
 import format as FM
 import inclusion as IN
@@ -37,6 +39,7 @@ class Diagnostics:
     config: PL.RunConfig
     zero_income: bool
     link_resolutions: tuple = ()
+    operations: tuple = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,6 +62,9 @@ def build_ports(config: PL.RunConfig) -> Ports:
     if config.vision:
         from ports.vision import VisionPort
         vision = VisionPort()
+    if config.ops and os.environ.get("ANTHROPIC_API_KEY"):
+        from ports.ops import OpsPort
+        ops = OpsPort()
     return Ports(vision=vision, ops=ops)
 
 
@@ -71,17 +77,19 @@ def decide(ds: L.Dataset, req: L.Request, config: PL.RunConfig, ports: Ports = P
     if config.links:
         events, res = LK.resolve_links(events)
         link_resolutions = tuple(res)
-    # amend.py (V1-3) slots in here, gated by config.ops
     det = RC.detect(events, req.user_id)
-    led = LG.forecast(det.streams, det.oneoffs, req.request_date,
+    streams, oneoffs, operations = AD.apply(det.streams, det.oneoffs, events, ds.messages_by_user.get(req.user_id, ()),
+                                            ports.ops if config.ops else None, ds.fx, profile.home_currency, req.request_date)
+    streams, oneoffs = tuple(streams), tuple(oneoffs)
+    led = LG.forecast(streams, oneoffs, req.request_date,
                       profile.current_available_balance, profile.minimum_balance_to_keep, req.user_id)
     cap = LG.capacity(led, req.requested_amount)
-    cands = PL.candidates(req, profile, ds.options_by_request[req.request_id], led, cap, det.streams, det.oneoffs, config)
+    cands = PL.candidates(req, profile, ds.options_by_request[req.request_id], led, cap, streams, oneoffs, config)
     annotated, chosen, status = RK.choose(cands, profile, req, cap)
-    streams_by_id = {s.stream_id: s for s in det.streams}
+    streams_by_id = {s.stream_id: s for s in streams}
     row = FM.render(req, profile, chosen, status, cap, streams_by_id)
     diag = Diagnostics(
-        capacity=cap, streams=det.streams, oneoffs=det.oneoffs,
+        capacity=cap, streams=streams, oneoffs=oneoffs, operations=tuple(operations),
         exclusions=tuple((e.event_id, e.exclusion_reason or "") for e in events if not e.included),
         candidates=tuple(annotated), winning_sort_key=chosen.sort_key if chosen else None,
         config=config, zero_income=det.zero_income, link_resolutions=link_resolutions,
