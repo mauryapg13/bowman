@@ -43,14 +43,34 @@ def reset() -> None:
         LOG.unlink()
 
 
-def summarise(n_requests: int = 250) -> dict:
-    per: dict[tuple[str, str, str], dict] = defaultdict(lambda: {"calls": 0, "cache_hits": 0, "input_tokens": 0, "output_tokens": 0, "estimated_cost_usd": 0.0})
+def mark_final_run() -> None:
+    """Everything after the last marker is the run that produced output.csv."""
+    with open(LOG, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps({"marker": "final_run", "ts": datetime.now(timezone.utc).isoformat(timespec="seconds")}) + "\n")
+
+
+def _rows() -> tuple[list[dict], list[dict]]:
+    """(cache-building rows before the last marker, final-run rows after it)."""
+    before: list[dict] = []; after: list[dict] = []; seen_marker = False
     if LOG.exists():
         for line in LOG.read_text(encoding="utf-8").splitlines():
             r = json.loads(line)
-            k = (r["port"], r["provider"], r["model"])
-            for f in ("calls", "cache_hits", "input_tokens", "output_tokens", "estimated_cost_usd"):
-                per[k][f] += r[f]
+            if r.get("marker") == "final_run":
+                before += after; after = []; seen_marker = True
+                continue
+            (after if seen_marker else before).append(r) if seen_marker else before.append(r)
+    return before, after
+
+
+def summarise(n_requests: int = 250, rows: list[dict] | None = None) -> dict:
+    per: dict[tuple[str, str, str], dict] = defaultdict(lambda: {"calls": 0, "cache_hits": 0, "input_tokens": 0, "output_tokens": 0, "estimated_cost_usd": 0.0})
+    if rows is None:
+        before, after = _rows()
+        rows = before + after
+    for r in rows:
+        k = (r["port"], r["provider"], r["model"])
+        for f in ("calls", "cache_hits", "input_tokens", "output_tokens", "estimated_cost_usd"):
+            per[k][f] += r[f]
     total = {"calls": 0, "cache_hits": 0, "input_tokens": 0, "output_tokens": 0, "estimated_cost_usd": 0.0}
     for v in per.values():
         for f in total:
@@ -62,7 +82,10 @@ def summarise(n_requests: int = 250) -> dict:
 
 
 def report(n_requests: int = 250) -> str:
-    s = summarise(n_requests)
+    before, after = _rows()
+    live = [r for r in before + after if r["calls"] == 1]
+    s = summarise(n_requests, live)                     # every live model call that built the shipped cache
+    fin = summarise(n_requests, after)                  # the run that wrote output.csv (cache hits)
     t = s["totals"]
     lines = [
         "# Usage report — final full-dataset run",
@@ -75,8 +98,15 @@ def report(n_requests: int = 250) -> str:
         "mapping each of the 215 messages to one closed-enum operation (`ports/ops.py`).",
         "`decision_explanation` is templated by code: **zero model calls** for that column.",
         "All port results are cached on sha256(payload)+prompt_version, so a re-run is offline.",
+        "Vision ran on the reviewed-transcription backend (all 16 images opened and transcribed during",
+        "development, sha256 provenance in `code/ports/vision_table.json`): zero model tokens for images.",
         "",
-        "## Per model",
+        f"The run that wrote `output.csv` made **{fin['totals']['calls']} live model calls** and "
+        f"**{fin['totals']['cache_hits']} cache hits** — it is fully reproducible offline. The tokens and cost below are the "
+        "live calls that populated that cache (this is the compute the submission actually consumed; a handful of early "
+        "calls under a superseded prompt version are included rather than hidden).",
+        "",
+        "## Per model (live calls that built the cache)",
         "",
         "| port / provider / model | live calls | cache hits | input tokens | output tokens | est. cost (USD) |",
         "|---|---|---|---|---|---|",
@@ -89,7 +119,7 @@ def report(n_requests: int = 250) -> str:
         "",
         "## Totals",
         "",
-        f"- model calls: **{t['calls']}** (plus {t['cache_hits']} cache hits)",
+        f"- live model calls: **{t['calls']}**; final-run cache hits: **{fin['totals']['cache_hits']}**",
         f"- input tokens: **{t['input_tokens']:,}**; output tokens: **{t['output_tokens']:,}**; total: **{t['total_tokens']:,}**",
         f"- average tokens per request: **{t['avg_tokens_per_request']:.1f}**",
         f"- estimated total cost: **${t['estimated_cost_usd']:.4f}**; per request: **${t['cost_per_request_usd']:.6f}**",

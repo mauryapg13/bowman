@@ -98,8 +98,11 @@ def decide(ds: L.Dataset, req: L.Request, config: PL.RunConfig, ports: Ports = P
     streams, oneoffs, operations = AD.apply(det.streams, det.oneoffs, events, ds.messages_by_user.get(req.user_id, ()),
                                             ports.ops if config.ops else None, ds.fx, profile.home_currency, req.request_date)
     streams, oneoffs = tuple(streams), tuple(oneoffs)
-    led = LG.forecast(streams, oneoffs, req.request_date,
-                      profile.current_available_balance, profile.minimum_balance_to_keep, req.user_id)
+    opening = profile.current_available_balance
+    if config.reapply_settled_past:                                   # ablation-only negative control (spec §3 guard 3)
+        recent = [e for e in events if e.included and e.status == "settled" and (req.request_date - e.event_date).days <= 30]
+        opening += sum((e.amount or 0.0) * (1 if e.direction == "credit" else -1) for e in recent)
+    led = LG.forecast(streams, oneoffs, req.request_date, opening, profile.minimum_balance_to_keep, req.user_id)
     cap = LG.capacity(led, req.requested_amount)
     cands = PL.candidates(req, profile, ds.options_by_request[req.request_id], led, cap, streams, oneoffs, config)
     annotated, chosen, status = RK.choose(cands, profile, req, cap)

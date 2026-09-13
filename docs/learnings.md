@@ -68,6 +68,27 @@ file is the *why* and the *gotchas*. Append, never rewrite history; date each en
 - **`request_12`**: capacity == requested yet `affordable_with_plan/installments`
   because the user rejects full payment — capacity and recommendation are independent.
 
+## Learned in V1 (2026-09-13, from the calibration table)
+
+- **A scheduled salary that matches no stream must still become income** (user_01: one
+  prorated salary + "Next confirmed salary"; the key is `affordable_now`, impossible without
+  income after 15 Mar). Promote it to a monthly stream anchored on itself.
+- **Absorption must pick the closest-amount stream** when a user has two salary streams
+  (user_13) — otherwise the scheduled row is a one-off *and* a predicted occurrence: double count.
+- **Streams end when they skip a beat**: expected next occurrence > 7 days before the user's
+  last settled event ⇒ ended (user_05 "Final employer payroll", user_13 second income). This
+  catches terminations without reading wording.
+- **Messages can create income only when no income stream exists** (`start_stream`, allow-list
+  target `new:salary`): users 14/15 have zero history and the key counts the confirmed salary.
+- **GLM 5.3 Flash handles the Indonesian messages and the closed enum well** at temperature 0;
+  ~1,400 input / ~370 output tokens per message; whole cache ≈ $0.11.
+- **Determinism test = full CLI run twice**; with a live provider and a cold cache that is
+  ~200 calls × ~5 s. Warm the cache first (run `main.py` once) or the suite looks hung.
+- **Stream amount estimator**: median vs mean vs last-3 made no consistent difference on
+  categoricals; residual deltas of a few percent remain on 4–5 users and are not the estimator.
+- The `Weekly app earnings`-style gig income + "payout still pending" message (request_10):
+  the key drops ~one stream's worth; not identifiable from the text — left as a known miss.
+
 ## Engineering gotchas
 
 - The starter shipped an **empty `code/evaluation/main.py`**; with `code/evaluation`
