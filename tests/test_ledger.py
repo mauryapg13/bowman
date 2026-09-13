@@ -159,11 +159,17 @@ def test_variable_streams_restart_at_the_request():
     assert days_of(led, "predicted", "stream_user_9_2")[:3] == [5, 12, 19]
     off = LG.forecast([var], [], START, 1000, 0, variable_first_day=None)
     assert days_of(off, "predicted", "stream_user_9_1")[:3] == [5, 12, 19]
-    # a recorded occurrence after the request keeps its real anchor
+    # R7 (docs/ruleset.md, sample request_21): a pending/scheduled occurrence after the
+    # request is reserved as recorded but does not replace the recurring forecast — the
+    # stream still restarts at day 5; a predicted day equal to a recorded day is skipped.
     fut = Stream("stream_user_9_3", "user_9", "debit", "dining", None, 7, 50.0, START + timedelta(days=4),
                  occ + (Occurrence("event_2", START + timedelta(days=4), 50.0),), "fixed", None, "event_2")
     led = LG.forecast([fut], [], START, 1000, 0)
-    assert days_of(led, "recorded") == [4] and days_of(led, "predicted")[:2] == [11, 18]
+    assert days_of(led, "recorded") == [4] and days_of(led, "predicted")[:2] == [5, 12]
+    same = Stream("stream_user_9_4", "user_9", "debit", "dining", None, 7, 50.0, START + timedelta(days=5),
+                  occ + (Occurrence("event_3", START + timedelta(days=5), 50.0),), "fixed", None, "event_3")
+    led = LG.forecast([same], [], START, 1000, 0)
+    assert days_of(led, "recorded") == [5] and days_of(led, "predicted")[:2] == [12, 19]
 
 
 def test_phase_reset_never_touches_income_streams():
