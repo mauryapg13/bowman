@@ -41,7 +41,9 @@ Baseline (MVP, docs/mvp_results.md): cat 64%, Δ 250,286.
 
 | 25 | estimator for fixed varying bills (last / mean / median / max / last-3); per-category estimator search (729 combos, 9 rules × 3 categories); windowed trimmed means (30–120 days, last 4–12); fixed-stream placement by day arithmetic; rounding variable estimates to 5/10 units | ≤84% | — | **no change** | nothing beats trim-1 + round on exact rows (11); the per-category search reduces the small-row residual sum only 98 → 84 and is fitted; windowing is worse everywhere. Residual/σ check: on 11 of 16 rows the residual is within ~2σ of our own estimator's sampling error (σ = sd/√n per stream, summed over the placements before the trough) — i.e. the noise floor of estimating a hidden rate from ~20 draws. Above 2σ: 14, 15, 19, 07 (one placement in/out) |
 
-## Open misses after #25 (see score.py output)
+| 26 | requests 19 (+1,250) and 07 (−1,083): item-level study | — | — | **no rule found** | 19: no single item or estimator explains +1,250; only contrived mixes (groceries=max, shopping=median, …) hit it. 07: −1,083 ≈ the 1,005 music subscription + rounding, but music and the loan share the 13th in every history row, so the key cannot count one without the other unless its trough sits between two same-day items; no consistent rule. Percentage scaling of variable spend: +12% zeroes 14 and 15 together but breaks all other small rows (#25 sweep) — not proportional across rows |
+
+## Open misses after #26 (see score.py output)
 
 - request_05: ended payroll cut too early — our min 7,777 vs key 13,837 (key still counts one more occurrence or cuts later expenses).
 - after #23 the categorical misses are 06, 11, 19, 21
