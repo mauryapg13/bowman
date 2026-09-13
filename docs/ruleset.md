@@ -110,6 +110,16 @@ experiment; their results are committed under `code/cache/` and the final run is
 (0 live calls). One of them (user_104) now reads "confirmed base salary is ZAR 35860" as an
 `amend_stream` where the earlier view returned `none`; that flips request_104 to `affordable_now`.
 
+
+Consistency check of R7/R8 on every non-settled row of the 25 sample users (`scratch/ruleset_progress.md`
+15:00): request_20 has a settled 5 Feb utilities bill *and* a pending 9 Feb utilities debit (822.05,
+from an image) — both counted, residual −9; request_23 has a healthcare stream *and* a pending
+healthcare debit of 1,553.20 — both counted, residual +28.8 (if the key counted only one we would be
+≈ 1,300 optimistic). request_01's pending transport authorization (567.60) and request_21's are the
+only pending variable-category rows (R7); request_24's scheduled insurance is the only scheduled
+debit against a bill stream (R8). Failed debits (05, 25) are ignored and the bill still recurs, as the
+problem statement says.
+
 ## 4. Rules we could not decode (honest boundary)
 
 Per-row residual of our pre-trough outflow vs the key's, after R7 (`scratch/schedule_cmp.py`,
