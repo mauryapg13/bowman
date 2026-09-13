@@ -1,0 +1,36 @@
+{
+  "model": "z-ai/glm-5.3-flash",
+  "provider": "openrouter",
+  "raw": [
+    {
+      "currency": null,
+      "effective_date": null,
+      "ended": true,
+      "new_amount": null,
+      "one_occurrence_only": false,
+      "op": "amend_stream",
+      "target_id": "stream_user_59_1",
+      "target_kind": "stream"
+    },
+    {
+      "currency": null,
+      "effective_date": null,
+      "ended": true,
+      "new_amount": null,
+      "one_occurrence_only": false,
+      "op": "amend_stream",
+      "target_id": "stream_user_59_3",
+      "target_kind": "stream"
+    },
+    {
+      "currency": null,
+      "effective_date": null,
+      "ended": true,
+      "new_amount": null,
+      "one_occurrence_only": false,
+      "op": "amend_stream",
+      "target_id": "stream_user_59_4",
+      "target_kind": "stream"
+    }
+  ]
+}

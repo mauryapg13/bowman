@@ -1,0 +1,16 @@
+{
+  "model": "z-ai/glm-5.3-flash",
+  "provider": "openrouter",
+  "raw": [
+    {
+      "currency": null,
+      "effective_date": null,
+      "ended": false,
+      "new_amount": null,
+      "one_occurrence_only": false,
+      "op": "confirm",
+      "target_id": "event_10699",
+      "target_kind": "event"
+    }
+  ]
+}

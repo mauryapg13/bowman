@@ -43,7 +43,10 @@ Baseline (MVP, docs/mvp_results.md): cat 64%, Δ 250,286.
 
 | 26 | requests 19 (+1,250) and 07 (−1,083): item-level study | — | — | **no rule found** | 19: no single item or estimator explains +1,250; only contrived mixes (groceries=max, shopping=median, …) hit it. 07: −1,083 ≈ the 1,005 music subscription + rounding, but music and the loan share the 13th in every history row, so the key cannot count one without the other unless its trough sits between two same-day items; no consistent rule. Percentage scaling of variable spend: +12% zeroes 14 and 15 together but breaks all other small rows (#25 sweep) — not proportional across rows |
 
-## Open misses after #26 (see score.py output)
+| 27 | ops-v3: a platform saying its payout is pending / not withdrawable makes that user's platform-payout income unconfirmed → `amend_stream ended` on each platform/app/gig payout stream (never payroll) | 84% | 100k (mean abs safe error 109k → 100k) | yes | request_10: 266,700 → 38,312 (key 12,700); measured first that dropping those streams is what the key does. On the 250: 23 platform streams ended for the payout-pending users; the 12 non-platform endings are all "employment / seasonal contract has ended" messages (correct). Samples otherwise unchanged. Prompt bump re-classified all 215 messages (~$0.10) |
+| 28 | request_05 termination timing | — | — | no change needed | the payroll stream already ends at the missing October occurrence; no income in the window; the +366 residual is 82 days of accumulated variable-spend estimate noise (1.2σ) |
+
+## Open misses after #28 (see score.py output)
 
 - request_05: ended payroll cut too early — our min 7,777 vs key 13,837 (key still counts one more occurrence or cuts later expenses).
 - after #23 the categorical misses are 06, 11, 19, 21
