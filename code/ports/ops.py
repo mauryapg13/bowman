@@ -127,6 +127,9 @@ class OpsPort:
         if hit is not None:
             U.record("ops", hit.get("provider", "cache"), hit.get("model", ""), 0, 0, cache_hit=True)
             raw_ops = hit["raw"]
+        elif not LLM.provider():                     # offline checkout (CI, a judge without keys): a miss is "no operation", never cached
+            U.record("ops", "offline", "", 0, 0, cache_hit=False)
+            raw_ops = []
         else:
             raw_ops, in_tok, out_tok, provider, model = self._call_llm(payload)
             self.cache.put(k, {"provider": provider, "model": model, "raw": raw_ops})

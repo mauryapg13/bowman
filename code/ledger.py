@@ -122,9 +122,11 @@ def _stream_placements(stream: Stream, start: date) -> list[Placement]:
     out: list[Placement] = []
     recorded_days: set[int] = set()
     last_recorded_day = -10**9
+    reset = any(p.startswith("ledger:phase-reset") for p in stream.provenance)
     for occ in stream.occurrences:                     # 1. recorded occurrences in the window
         day = _day(occ.date, start)
-        last_recorded_day = max(last_recorded_day, day)
+        if not reset or day < 0:                       # a reset stream: only past occurrences gate prediction (R7)
+            last_recorded_day = max(last_recorded_day, day)
         if 0 <= day <= WINDOW_DAYS:
             recorded_days.add(day)
             out.append(Placement(day, occ.amount, stream.direction, occ.event_id, "recorded"))
@@ -140,6 +142,9 @@ def _stream_placements(stream: Stream, start: date) -> list[Placement]:
             break
         if day > last_recorded_day and day >= 0:
             if day in recorded_days:
+                if reset:
+                    k += 1
+                    continue                           # the recorded (pending/scheduled) occurrence stands; never doubled
                 raise DoublePlacement(f"{stream.stream_id}: predicted and recorded on day {day}")
             amount = _amount_on(stream, d, k)
             if amount is not None:
@@ -160,9 +165,11 @@ def _phase_reset(stream: Stream, start: date, first_day: int | None = VARIABLE_F
     if first_day is None or stream.direction != "debit" or stream.description is not None:
         return stream                      # only category-level spend streams; never income (start_stream salaries also have description None)
     first = min(first_day, stream.cadence_days)
-    future = tuple(o for o in stream.occurrences if o.date >= start)
-    if future:                                         # a recorded occurrence after the request: keep the real anchor
-        return stream
+    # A pending/scheduled occurrence dated after the request (a "pending fuel authorization")
+    # is reserved as a recorded placement but does not replace the category's recurring
+    # forecast: problem_statement asks to reserve pending debits AND forecast recurring
+    # expenses (docs/ruleset.md R7; sample request_21). Prediction still restarts at the
+    # request; a predicted day that coincides with a recorded one is skipped, never doubled.
     return replace(stream, anchor=start + timedelta(days=first - stream.cadence_days),
                    provenance=stream.provenance + (f"ledger:phase-reset first occurrence day {first}",))
 
