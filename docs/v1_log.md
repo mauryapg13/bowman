@@ -50,7 +50,9 @@ Baseline (MVP, docs/mvp_results.md): cat 64%, Δ 250,286.
 
 | 30 | "impose rules that give the result, then look for the why": per row, the smallest set of deviations (per-stream estimator ∈ {ceil/floor trim, mean, median, last, max, min}, ±1 occurrence) that reproduces the key's pre-trough outflow exactly | — | — | **no common rule** | 06 = shopping→min & utilities→last; 14 = groceries→last & shopping→min; 15 = transport→max & utilities→max; 22 = transport→last; 18 = transport→floor; 20 = three deviations; 13/23 none within three. Every row is fixed by a different pair of contradictory statistics — the signature of per-purchase noise, not of a hidden rule |
 
-## Open misses after #30 (see score.py output)
+| 31 | same solver on request_19 and request_11 (and, for contrast, 07/02/03/25/04) | — | — | **no common rule** | Exact (±0.005): 19 and 11 have **no** ≤3-deviation solution. 19 needs four (groceries→max +1,352, shopping→median −39, transport→median −12, healthcare→median −51 = +1,250 exactly) — one stream at its all-time max and three at their median is not a rule anyone would write. 11 (−238,397 at the day-11 trough, IDR): nothing within three; the closest (healthcare −1 occurrence, utilities +1) is 2,426 off and is a phase shuffle, not an estimator. The key's own plan for 11 implies its dining estimate is 1,265,305 (= 665,950 reduce-to + 599,355 shortfall, one occurrence before the trough) — no mean/median/trimmed/last-k statistic of the 9 dining occurrences equals it. Relaxed to 0.02%: 02 = groceries→last; 03 = transport→mean & utilities→median; 25 = entertainment→last & shopping→mean; 07 = dining→mean & music −1; 04 = transport→max & utilities +1. Twelve rows now solved, twelve different recipes, `max`/`min`/`last`/`median` each appearing as "the" rule somewhere — the deviations are the noise itself |
+
+## Open misses after #31 (see score.py output)
 
 - request_05: ended payroll cut too early — our min 7,777 vs key 13,837 (key still counts one more occurrence or cuts later expenses).
 - after #23 the categorical misses are 06, 11, 19, 21
