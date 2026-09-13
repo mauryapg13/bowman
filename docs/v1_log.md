@@ -19,10 +19,13 @@ Baseline (MVP, docs/mvp_results.md): cat 64%, Δ 250,286.
 | 11 | grid search: variable-spend amount {median, mean, last, mean-last-4, median-last-6, max-last-4} × cadence {median gap, mean gap, last gap, 7, 14} — 30 combos | ≤2/20 exact | 374–1,285 on the six small rows | **no change** | no combination zeroes more than 2 rows; (mean, median gap) ≈ (median, median gap); the key's estimator is outside this family. Stopped chasing `amount_safe_to_pay` exactness here |
 | 12 | monthly-total-as-monthly-stream, description-level grouping (3 bands), min-occurrences 2 | 0–1/20 | 287k–850k | **reverted** | all far worse |
 
-## Open misses after #12 (see score.py output)
+| 13 | **phase reset for variable-spend streams**: next groceries/transport/dining occurrence on request_date + 3 (not last occurrence + cadence) | 72% | **87,848** | yes | found by plotting all 25 curves: in 21/25 our minimum is the pre-payday trough, so only the first ~10 days of variable spend matter; the key places the next occurrence a few days after the request. Rows now within a few units: 08 +7, 13 +15, 18 +6, 20 −7, 22 +3, 15 +16. Within 2%: 5 → 10 rows; within 0.5%: 4 → 5; big rows 02 +972k → −130k, 04 +2.1M → −176k. Day 2/4/5 tested: 3 is the optimum (4–5 lose request_04 again) |
+| 14 | daily/weekly accrual of variable spend (window 30/60/90/all), per-category mixes, last-month replay | — | 88k–365k | **reverted** | accrual halves mean error but drops categoricals to 60–64% (the key is lumpy); replay is worse everywhere |
+
+## Open misses after #14 (see score.py output)
 
 - request_05: ended payroll cut too early — our min 7,777 vs key 13,837 (key still counts one more occurrence or cuts later expenses).
-- request_06 (−86), request_21 (+185), request_13 (+705), request_23 (−745): variable-spend estimation differences; no estimator variant fixed them without hurting others (#9).
+- after #13 the remaining residuals are: 02 −130k, 03 +16k, 04 −176k, 07 −8.9k, 11 −389k, 19 −3.4k, 25 −645k (all IDR/INR users with large weekly streams) and 06 −58, 21 +59, 23 +66 — a few percent of the pre-payday variable spend; no estimator variant fixed them (#9, #11, #14).
 - request_10: "payout still pending" message; key drops ~489k of gig income; our ops return `none`. Deliberately not chased — which of four gig streams the key dropped is not identifiable from the text.
 - request_11: −389k pessimistic; dining stream every 21 days at median 1.37M IDR — the key's estimate is lower.
 - request_07 / 12: earliest date off by days (12: we find no full-payment day; key has day 0 — capacity 58,772 vs 65,164).

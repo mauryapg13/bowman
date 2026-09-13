@@ -91,6 +91,11 @@ file is the *why* and the *gotchas*. Append, never rewrite history; date each en
 
 - **Cash moves on `settlement_date`** — recurrence anchors, cadence and placements must use
   it (request_07: salary event 15th, settled 23rd; key's earliest date is the 23rd).
+- **Plot the curves before fitting.** All 25 minima sit on the pre-payday trough, so only
+  the first ~10 days of forecast matter for `amount_safe_to_pay`. That reframed the search
+  from "which statistic" to "which phase": the key restarts variable-spend streams at the
+  request (first occurrence ~day 3), not at last-occurrence + cadence. Mean error 248k → 88k,
+  categoricals unchanged. (`docs/v1_log.md` #13)
 - **The key's variable-spend estimator is not median/mean/last/last-N × median-gap/mean-gap/7/14**
   (30-combo grid, ≤2 of 20 rows exact). Residuals of a few percent on ~6 users remain; exactness
   on `amount_safe_to_pay` is not reachable by tuning this family. Don't spend more time there.
