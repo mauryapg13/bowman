@@ -134,7 +134,7 @@ def _stream_placements(stream: Stream, start: date) -> list[Placement]:
     return out
 
 
-def _phase_reset(stream: Stream, start: date) -> Stream:
+def _phase_reset(stream: Stream, start: date, first_day: int | None = VARIABLE_FIRST_DAY) -> Stream:
     """Variable-spend streams (groceries/transport/dining, description None) do not
     wait a full cadence from their last recorded purchase: AGENTS.md §6.3 asks for a
     conservative forecast of essential variable spending, and the answer key places
@@ -143,9 +143,9 @@ def _phase_reset(stream: Stream, start: date) -> Stream:
     the mean calibration error (248k -> 88k) and doubles the rows within 2%, with
     no change to the categorical columns. Recorded occurrences on/after the request
     are kept; prediction restarts from the request date."""
-    if stream.description is not None:
+    if stream.description is not None or first_day is None:
         return stream
-    first = min(VARIABLE_FIRST_DAY, stream.cadence_days)
+    first = min(first_day, stream.cadence_days)
     future = tuple(o for o in stream.occurrences if o.date >= start)
     if future:                                         # a recorded occurrence after the request: keep the real anchor
         return stream
@@ -154,10 +154,11 @@ def _phase_reset(stream: Stream, start: date) -> Stream:
 
 
 def forecast(streams: tuple[Stream, ...] | list[Stream], oneoffs: tuple[OneOff, ...] | list[OneOff],
-             start: date, opening: float, floor: float, user_id: str = "") -> Ledger:
+             start: date, opening: float, floor: float, user_id: str = "",
+             variable_first_day: int | None = VARIABLE_FIRST_DAY) -> Ledger:
     placements: list[Placement] = []
     for s in streams:
-        placements.extend(_stream_placements(_phase_reset(s, start), start))
+        placements.extend(_stream_placements(_phase_reset(s, start, variable_first_day), start))
     for o in oneoffs:
         day = _day(o.date, start)
         if 0 <= day <= WINDOW_DAYS:

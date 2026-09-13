@@ -57,16 +57,17 @@ implies the exact 90-day minimum: `amount_safe_to_pay + minimum_balance_to_keep`
 prints ours beside it; the sign of the delta says whether we are optimistic (missed an outflow)
 or pessimistic (missed an income). Rows within a few units mean the curve is right in shape.
 
-**Ablation (25 samples, all-three-categoricals exact):**
+**Ablation (25 samples):**
 
-| configuration | affordability | method | plan | earliest date | all 3 exact |
-|---|---|---|---|---|---|
-| deterministic core only | 72% | 76% | 72% | 76% | 68% |
-| + lifecycle links | 72% | 76% | 72% | 76% | 68% |
-| + vision (16 images) | 72% | 76% | 72% | 76% | 68% |
-| + message operations | 76% | 80% | 76% | 76% | 72% |
-| + spending changes (full) | **80%** | **84%** | **80%** | **76%** | **76%** |
-| negative control (re-apply settled past) | 64% | 72% | 68% | 40% | 56% |
+| configuration | affordability | method | plan | earliest date | all 3 exact | mean \|calibration Δ\| |
+|---|---|---|---|---|---|---|
+| deterministic core only | 68% | 72% | 68% | 76% | 64% | 120k |
+| + lifecycle links | 68% | 72% | 68% | 76% | 64% | 120k |
+| + vision (16 images) | 68% | 72% | 68% | 76% | 64% | 120k |
+| + message operations | 72% | 76% | 72% | 76% | 68% | 88k |
+| + spending changes, variable spend phased from last purchase | **76%** | **80%** | **76%** | **76%** | **72%** | 248k |
+| + variable-spend phase reset (full system) | **76%** | **80%** | **76%** | **76%** | **72%** | **88k** |
+| negative control (re-apply settled past) | 64% | 72% | 68% | 40% | 56% | 1.83M |
 
 Links and vision are correct but nearly invisible on the samples (no sample user has a
 duplicate charge; 12 of the 16 images are settled history already inside the balance).
@@ -77,8 +78,12 @@ users have no scheduled salary row, and for many the message is the only forward
 
 ## Known limitations
 
-- Variable-spend forecasts (groceries/transport/dining) use the median of history; the answer
-  key's estimator differs slightly, leaving deltas of a few percent on some users.
+- Variable spend (groceries/transport/dining) is a fixed-period clock per user (gaps of exactly
+  5/7/10/14/21 days across all 275 users) with ±15% amount noise. We forecast each category on
+  its own cadence at the median amount, restarting the clock 3 days after the request — the
+  phase the answer key uses (found by plotting all 25 sample curves; `docs/v1_log.md` #13). The
+  remaining `amount_safe_to_pay` residuals (1–4% on a few large users) are the amount noise on
+  the one to three purchases before payday, which no history-only forecast can know.
 - Income that ends is detected from a missing expected occurrence, not from wording; a payroll
   that stops exactly at the request date with no gap is not caught.
 - Gig-income messages ("payout still pending") are classified `none`; the key appears to drop

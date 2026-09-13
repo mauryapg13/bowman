@@ -102,7 +102,8 @@ def decide(ds: L.Dataset, req: L.Request, config: PL.RunConfig, ports: Ports = P
     if config.reapply_settled_past:                                   # ablation-only negative control (spec §3 guard 3)
         recent = [e for e in events if e.included and e.status == "settled" and (req.request_date - e.event_date).days <= 30]
         opening += sum((e.amount or 0.0) * (1 if e.direction == "credit" else -1) for e in recent)
-    led = LG.forecast(streams, oneoffs, req.request_date, opening, profile.minimum_balance_to_keep, req.user_id)
+    led = LG.forecast(streams, oneoffs, req.request_date, opening, profile.minimum_balance_to_keep, req.user_id,
+                      variable_first_day=config.variable_first_day)
     cap = LG.capacity(led, req.requested_amount)
     cands = PL.candidates(req, profile, ds.options_by_request[req.request_id], led, cap, streams, oneoffs, config)
     annotated, chosen, status = RK.choose(cands, profile, req, cap)
