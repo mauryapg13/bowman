@@ -55,6 +55,29 @@ payday. With one request per user there is no second observation to pin the day.
 | 14, 15 | capacity too high | first-salary ordering, see above |
 | 05, 10, 12, 24 | capacity | stream termination / gig payout / one-occurrence differences |
 
+## Placement-level study of the focus rows (rounded-amount model, before payday)
+
+With varying streams rounded to whole units (constant bills exact) the pre-payday totals compare
+item by item:
+
+| row | ours vs key | smallest edit that reproduces the key |
+|---|---|---|
+| 08 | 451 vs 452 | none needed — rounding noise (+1) |
+| 18 | 625 vs 624 | none needed (−1) |
+| 22 | 155 vs 157 | none needed (+2) |
+| 21 | 521 vs 568 | **one more streaming subscription (47)** — the key counts a second occurrence of a monthly item inside 12 days, or its trough is in month 2 |
+| 06 | 592 vs 539 | **remove insurance (26) + one transport (27)** — the key's trough is before day 5, or it places those two after payday |
+| 07 | 46,823 vs 38,775 | our reset adds a second grocery run on day 17 (7,116) that the key does not have; the natural schedule (day 7, day 21) fits better here |
+| 11 | 17.07M vs 16.88M | ≈ cloud storage (168k) + rounding — the key's trough is a day earlier than ours |
+| 20 | 32,682 vs 32,709 | +27: rounding of five large items |
+| 13 | trough in month 3 for both; +15 | rounding |
+| 19, 23, 24 | −3.5k / +53 / +775 | no single-item explanation; two or three items differ |
+
+Pattern: on the rows that miss, the difference is **where the trough falls relative to one
+monthly bill or one variable purchase** — a day either side of payday. It is not the same
+item or the same direction on any two rows (07 wants no reset for groceries, 06 wants fewer
+items, 21 wants one more), so there is no single rule to add; a per-row choice would be fitting.
+
 ## What would move the remaining rows
 
 - **Integer rounding of varying streams**: evidence-based; on its own it does not add exact
