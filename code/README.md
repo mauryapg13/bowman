@@ -61,14 +61,14 @@ or pessimistic (missed an income). Rows within a few units mean the curve is rig
 
 | configuration | affordability | method | plan | earliest date | all 3 exact | mean \|calibration Δ\| |
 |---|---|---|---|---|---|---|
-| MVP core only | 80% | 84% | 80% | 88% | **76%** | 82,749 |
-| + lifecycle links | 80% | 84% | 80% | 88% | **76%** | 82,749 |
-| + vision | 80% | 84% | 80% | 88% | **76%** | 82,715 |
-| + message operations | 84% | 88% | 84% | 88% | **80%** | 71,347 |
+| MVP core only | 84% | 88% | 84% | 88% | **80%** | 153,060 |
+| + lifecycle links | 84% | 88% | 84% | 88% | **80%** | 153,060 |
+| + vision | 84% | 88% | 84% | 88% | **80%** | 153,033 |
+| + message operations | 88% | 92% | 88% | 88% | **84%** | 141,662 |
 | + spending changes, phase = last + cadence | 88% | 92% | 88% | 88% | **84%** | 246,640 |
-| + variable-spend phase reset, horizon 90 | 76% | 80% | 76% | 76% | **72%** | 71,603 |
-| + horizon 84 days (full system) | 84% | 88% | 84% | 88% | **80%** | 71,347 |
-| negative control: re-apply settled past | 68% | 76% | 72% | 44% | **60%** | 1,844,963 |
+| + variable-spend phase reset, horizon 90 | 80% | 84% | 80% | 76% | **76%** | 141,919 |
+| + horizon 84 days (full system) | 88% | 92% | 88% | 88% | **84%** | 141,662 |
+| negative control: re-apply settled past | 68% | 76% | 72% | 44% | **60%** | 1,986,371 |
 
 Links and vision are correct but nearly invisible on the samples (no sample user has a
 duplicate charge; 12 of the 16 images are settled history already inside the balance).

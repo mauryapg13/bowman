@@ -25,7 +25,7 @@ class RunConfig:
     ops: bool = False
     spending_changes: bool = False
     reapply_settled_past: bool = False      # ablation-only negative control
-    variable_first_day: int | None = 3      # variable-spend phase: first occurrence this many days after the request; None = last + cadence
+    variable_first_day: int | None = 5      # variable-spend phase: first occurrence this many days after the request; None = last + cadence
     horizon_days: int = 84                  # forecast/safety window; contract says 90, key behaves as <=86 (ledger.configure)
 
 

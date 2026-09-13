@@ -1,6 +1,6 @@
 # Usage report — final full-dataset run
 
-Generated 2026-09-13T06:52:46+00:00 from `code/evaluation/usage.jsonl`, which is appended by every port call during the run that produced `output.csv` (250 requests).
+Generated 2026-09-13T06:57:23+00:00 from `code/evaluation/usage.jsonl`, which is appended by every port call during the run that produced `output.csv` (250 requests).
 
 Design note: the decision pipeline is deterministic code. Models are used only at the
 perception edges — reading one amount off each of the 16 images (`ports/vision.py`) and
@@ -10,7 +10,7 @@ All port results are cached on sha256(payload)+prompt_version, so a re-run is of
 Vision ran on the reviewed-transcription backend (all 16 images opened and transcribed during
 development, sha256 provenance in `code/ports/vision_table.json`): zero model tokens for images.
 
-The run that wrote `output.csv` made **229 live model calls** and **32112 cache hits** — it is fully reproducible offline. The tokens and cost below are the live calls that populated that cache (this is the compute the submission actually consumed; a handful of early calls under a superseded prompt version are included rather than hidden).
+The run that wrote `output.csv` made **229 live model calls** and **33779 cache hits** — it is fully reproducible offline. The tokens and cost below are the live calls that populated that cache (this is the compute the submission actually consumed; a handful of early calls under a superseded prompt version are included rather than hidden).
 
 ## Per model (live calls that built the cache)
 
@@ -20,7 +20,7 @@ The run that wrote `output.csv` made **229 live model calls** and **32112 cache 
 
 ## Totals
 
-- live model calls: **547**; final-run cache hits: **32112**
+- live model calls: **547**; final-run cache hits: **33779**
 - input tokens: **613,079**; output tokens: **194,609**; total: **807,688**
 - average tokens per request: **3230.8**
 - estimated total cost: **$0.1893**; per request: **$0.000757**

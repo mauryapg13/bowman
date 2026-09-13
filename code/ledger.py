@@ -95,7 +95,7 @@ def _amount_on(stream: Stream, d: date, occurrence_index_after_anchor: int) -> f
 
 
 MONTHLY_MIN, MONTHLY_MAX = 28, 31
-VARIABLE_FIRST_DAY = 3      # variable-spend streams: next occurrence assumed this many days after the request
+VARIABLE_FIRST_DAY = 5      # variable-spend streams: next occurrence assumed this many days after the request (v1_log #23)
 
 
 def _add_months(d: date, n: int) -> date:
