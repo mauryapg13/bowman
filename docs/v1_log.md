@@ -81,3 +81,14 @@ status: affordable_now 55, affordable_with_plan 66, affordable_later 50, not_aff
 method: full 67, installments 44, partial 10, wait 50, not_recommended 79;
 `amount_safe_to_pay == 0` on 11 rows (was 30 at MVP). Two CLI runs: identical sha256.
 Model usage: 318 live GLM calls total while building the cache (~$0.11); the final run made 0 live calls.
+
+## Ruleset decoding under the no-noise premise (branch feat/ruleset, 2026-09-13) — see docs/ruleset.md
+
+| # | change | cat | Δ | kept? | evidence |
+|---|---|---|---|---|---|
+| 32 | noise-model study: `amount / midrange` histograms over 892 varying streams | — | — | fact | flat (uniform) on [0.72, 1.28] for category-level spend (max/min hard-capped at 1.775 for n ≥ 20) and on [0.88, 1.12] for monthly bills; not normal. `scratch/noise_shape*.py` |
+| 33 | currency-grid study: every constant stream is integer × unit (EUR/USD 1, ZAR 1.1, INR 5, IDR 50); the key's varying pre-trough totals sit on the same grid (ZAR 16,929 = 15,390 × 1.1, 8,104.80 = 7,368 × 1.1; IDR all ×100; EUR/USD integers) | — | — | fact | the key's per-stream amounts are the generator's base parameters, not history statistics. `scratch/grid*.py`, `scratch/feasible.py` |
+| 34 | 504-combo estimator sweep (window {all, 30–180 d, last 3–12, last 1–6 months} × {mean, median, trim, midrange, max, min, last} × {none, round, ceil, floor}) against the key's varying totals at our placement counts | ≤ 2/20 exact | — | **no rule** | trim+round (current) hits 1; nothing hits 3. `scratch/sweep_est.py` |
+| 35 | feasible-midpoint estimator (midpoint of [max/(1+w), min/(1−w)], w = 0.28 / 0.12, outliers dropped until feasible, grid-snapped) | 22 | worse | **candidate, unshipped** | −18 % total relative error on the 16 placement-consistent rows, but exact 4–5, categoricals unchanged, mean error worse on 04/10/24. `scratch/sweep_mu.py`, `scratch/fit_fmid_pipeline.py` |
+| 36 | **R7: a pending/scheduled variable-category occurrence after the request does not replace the recurring forecast** (reserved AND stream restarts at day 5; coinciding predicted day skipped) | **88 %** (22/25) | 119,306 | yes | request_21 +31.05 → +5.00; status 88 → 92 %, earliest 88 → 92 %; 0 rows broken. On the 250: rows 41, 101, 141 change. `scratch/fit_pending_reset.py` |
+| 37 | schedule re-check (pure clock incl./excl. day 0, first day 3) and grid snapping of estimates, shared-noise test across streams | 22 | — | **no change** | clock matches the key's count vector on 9/20 rows vs 16/20 for the day-5 restart; 04 wants first day ≤ 3 and 06 wants ≥ 4; grid snapping changes nothing; multipliers uncorrelated across streams (r = 0.01). `scratch/schedule_cmp.py`, `scratch/fit_grid_snap.py`, `scratch/shared_noise.py` |
