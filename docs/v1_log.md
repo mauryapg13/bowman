@@ -37,7 +37,9 @@ Baseline (MVP, docs/mvp_results.md): cat 64%, Δ 250,286.
 
 | 23 | variable-spend first day re-tuned under the new estimator + horizon: 3 → **5** | **84%** | 141,662 | yes | counting sweep over first day 1–6, estimator variants, termination grace, absorb tolerance: only first day 5/6 fixes a row (17) with no categorical break; also request_25 −619k → within 50k; cost: request_04 calibration −143k → +2.2M (categorical unchanged). Rows within 2%: 14 → 16; within 5%: 16 → 20; exact 11 |
 
-## Open misses after #23 (see score.py output)
+| 24 | trim proportion (0.1n / 0.2n / 0.25n, floor/round/ceil), 2 each side, ceil/floor rounding | 76–84% | 140k–143k | **no change** | trim-1 + round stays best; the small residuals (06 −6, 13 +15, 14 +21, 15 +15, 20 −9, 22 +2, 23 +29) are invariant across estimators → structural (one small item in/out of the window), not estimator noise. The key's safe amounts carry the opening balance's cents (597.30 vs 603.30), so no rounding of the final number can bridge them |
+
+## Open misses after #24 (see score.py output)
 
 - request_05: ended payroll cut too early — our min 7,777 vs key 13,837 (key still counts one more occurrence or cuts later expenses).
 - after #23 the categorical misses are 06, 11, 19, 21
