@@ -1,0 +1,15 @@
+{
+  "model": "reviewed-transcription",
+  "provider": "table",
+  "result": {
+    "amount": 100000.0,
+    "amount_raw": "1,00,000.00",
+    "backend": "table",
+    "confidence": 0.95,
+    "currency": "INR",
+    "event_id": "event_1442",
+    "field_used": "Balance Due",
+    "image_id": "image_02",
+    "prompt_version": "vision-v1"
+  }
+}

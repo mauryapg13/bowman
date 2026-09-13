@@ -1,0 +1,15 @@
+{
+  "model": "reviewed-transcription",
+  "provider": "table",
+  "result": {
+    "amount": 4365000.0,
+    "amount_raw": "4,365,000",
+    "backend": "table",
+    "confidence": 0.98,
+    "currency": "IDR",
+    "event_id": "event_253",
+    "field_used": "Net Pay",
+    "image_id": "image_01",
+    "prompt_version": "vision-v1"
+  }
+}

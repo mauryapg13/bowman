@@ -21,3 +21,6 @@ code.zip
 
 # throwaway inspection scripts (00 recon.md)
 scratch/
+
+# port call log for the current run (usage_report.md is generated from it and IS committed)
+code/evaluation/usage.jsonl

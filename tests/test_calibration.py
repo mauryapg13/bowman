@@ -12,13 +12,14 @@ sys.path.insert(0, str(ROOT / "code" / "evaluation"))
 
 import load as L
 import main as M
+import plans as PL
 import score as S
 
 
 @pytest.fixture(scope="module")
 def report():
     ds = L.load(ROOT / "dataset")
-    return S.score(M.run(requests=ds.sample_requests, ds=ds), ds.sample_answers)
+    return S.score(M.run(requests=ds.sample_requests, config=PL.FULL, ds=ds), ds.sample_answers)
 
 
 @pytest.fixture(scope="module")

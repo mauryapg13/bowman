@@ -142,9 +142,10 @@ def to_json(rep: ScoreReport) -> dict:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--json", help="write the report as JSON to this path")
+    ap.add_argument("--config", default="full", choices=["mvp", "full"])
     args = ap.parse_args(argv)
     ds = L.load(M.REPO_ROOT / "dataset")
-    decisions = M.run(requests=ds.sample_requests, config=PL.MVP, ds=ds)
+    decisions = M.run(requests=ds.sample_requests, config=PL.FULL if args.config == "full" else PL.MVP, ds=ds)
     rep = score(decisions, ds.sample_answers)
     print(render(rep))
     if args.json:

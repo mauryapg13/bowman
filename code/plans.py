@@ -28,6 +28,7 @@ class RunConfig:
 
 
 MVP = RunConfig()
+FULL = RunConfig(links=True, vision=True, ops=False, spending_changes=True)   # flipped on as V1 tasks land
 
 
 @dataclass(frozen=True, slots=True)
@@ -116,7 +117,7 @@ def candidates(request: Request, profile: Profile, options: tuple[PaymentOption,
         for subset in combinations(eligible, size):
             if len({c.stream_id for c in subset}) < size:      # stop and reduce on the same stream: skip
                 continue
-            new_streams = spending.apply(streams, subset)
+            new_streams = spending.apply(streams, subset, effective=request.request_date)
             led2 = LG.forecast(new_streams, oneoffs, led.start, led.opening, led.floor, led.user_id)
             out.extend(base_candidates(request, options, led2, cap, tuple(subset)))
     return out

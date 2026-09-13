@@ -16,6 +16,7 @@ import amounts as AM
 import format as FM
 import inclusion as IN
 import ledger as LG
+import links as LK
 import load as L
 import plans as PL
 import rank as RK
@@ -35,6 +36,7 @@ class Diagnostics:
     winning_sort_key: tuple | None
     config: PL.RunConfig
     zero_income: bool
+    link_resolutions: tuple = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,11 +47,31 @@ class Decision:
     diagnostics: Diagnostics
 
 
-def decide(ds: L.Dataset, req: L.Request, config: PL.RunConfig) -> Decision:
+@dataclass(frozen=True, slots=True)
+class Ports:
+    vision: object | None = None
+    ops: object | None = None
+
+
+def build_ports(config: PL.RunConfig) -> Ports:
+    """The only place that reads the environment for model access."""
+    vision = ops = None
+    if config.vision:
+        from ports.vision import VisionPort
+        vision = VisionPort()
+    return Ports(vision=vision, ops=ops)
+
+
+def decide(ds: L.Dataset, req: L.Request, config: PL.RunConfig, ports: Ports = Ports()) -> Decision:
     profile = ds.profiles[req.user_id]
-    raw = AM.resolve_amounts(ds.events_by_user[req.user_id], ds.images_by_event, ds.fx, vision=None)
+    raw = AM.resolve_amounts(ds.events_by_user[req.user_id], ds.images_by_event, ds.fx,
+                             profile.home_currency, vision=ports.vision if config.vision else None)
     events = IN.gate(raw)
-    # links.py (V1-1) and amend.py (V1-3) slot in here, gated by config.links / config.ops
+    link_resolutions: tuple[LK.LinkResolution, ...] = ()
+    if config.links:
+        events, res = LK.resolve_links(events)
+        link_resolutions = tuple(res)
+    # amend.py (V1-3) slots in here, gated by config.ops
     det = RC.detect(events, req.user_id)
     led = LG.forecast(det.streams, det.oneoffs, req.request_date,
                       profile.current_available_balance, profile.minimum_balance_to_keep, req.user_id)
@@ -62,7 +84,7 @@ def decide(ds: L.Dataset, req: L.Request, config: PL.RunConfig) -> Decision:
         capacity=cap, streams=det.streams, oneoffs=det.oneoffs,
         exclusions=tuple((e.event_id, e.exclusion_reason or "") for e in events if not e.included),
         candidates=tuple(annotated), winning_sort_key=chosen.sort_key if chosen else None,
-        config=config, zero_income=det.zero_income,
+        config=config, zero_income=det.zero_income, link_resolutions=link_resolutions,
     )
     return Decision(req.request_id, row, chosen, diag)
 
@@ -71,7 +93,8 @@ def run(dataset_dir: Path | str = REPO_ROOT / "dataset", requests: tuple[L.Reque
         config: PL.RunConfig = PL.MVP, ds: L.Dataset | None = None) -> list[Decision]:
     ds = ds or L.load(dataset_dir)
     reqs = ds.requests if requests is None else requests
-    return [decide(ds, r, config) for r in reqs]
+    ports = build_ports(config)
+    return [decide(ds, r, config, ports) for r in reqs]
 
 
 def flexibility_index(ds: L.Dataset) -> dict[str, tuple[str, str]]:
@@ -85,7 +108,7 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     ds = L.load(args.dataset)
-    decisions = run(args.dataset, config=PL.MVP, ds=ds)
+    decisions = run(args.dataset, config=PL.FULL, ds=ds)
     zeros = WR.write([d.row for d in decisions], ds.requests, ds.profiles, ds.options_by_request,
                      flexibility_index(ds), args.out)
     from collections import Counter
