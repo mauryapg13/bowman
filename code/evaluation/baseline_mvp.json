@@ -9,9 +9,9 @@
     "decision_explanation": 0.72
   },
   "exact_match_categorical": 0.88,
-  "safe_abs_err_mean": 100217.712,
+  "safe_abs_err_mean": 100117.31199999999,
   "safe_within_half_pct": 12,
-  "calibration_mean_abs_delta": 119306.79999999999,
+  "calibration_mean_abs_delta": 119187.27619047619,
   "calibration": [
     {
       "request_id": "request_01",
@@ -223,10 +223,10 @@
     {
       "request_id": "request_24",
       "expected_min": 64420.0,
-      "our_min": 67093.0,
-      "delta": 2673.0,
+      "our_min": 64583.0,
+      "delta": 163.0,
       "capped": false,
-      "safe_ours": 16093.0,
+      "safe_ours": 13583.0,
       "safe_key": 13420.0
     },
     {

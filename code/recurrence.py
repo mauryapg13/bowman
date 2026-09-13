@@ -163,8 +163,11 @@ def _absorb(streams: list[Stream], leftovers: list[Event]) -> tuple[list[Stream]
         for i in by_cat.get((e.direction, e.category), []):
             s = streams[i]
             delta = (cash_date(e) - s.anchor).days
-            if s.cadence_days - ABSORB_TOLERANCE_DAYS <= delta <= s.cadence_days + ABSORB_TOLERANCE_DAYS:
-                fits.append((abs(e.amount - s.amount) / max(s.amount, 1e-9), i, delta))     # type: ignore[operator]
+            if not (s.cadence_days - ABSORB_TOLERANCE_DAYS <= delta <= s.cadence_days + ABSORB_TOLERANCE_DAYS):
+                continue
+            if e.direction == "debit" and not _amount_compatible(s, e.amount):       # type: ignore[arg-type]
+                continue                       # R8 (docs/ruleset.md): another amount => an additional confirmed payment, not the bill
+            fits.append((abs(e.amount - s.amount) / max(s.amount, 1e-9), i, delta))     # type: ignore[operator]
         if not fits:
             remaining.append(e)
             continue
@@ -178,6 +181,18 @@ def _absorb(streams: list[Stream], leftovers: list[Event]) -> tuple[list[Stream]
             provenance=s.provenance + (f"recurrence:absorbed scheduled {e.event_id} ({e.description!r}) at +{delta}d",),
         )
     return streams, remaining
+
+
+def _amount_compatible(s: Stream, amount: float) -> bool:
+    """R8 (docs/ruleset.md, sample request_24): a scheduled debit is the bill's next
+    occurrence only when its amount is the bill's amount (constant series) or inside the
+    recorded range (varying series). A 'Scheduled insurance payment' of 1,830 against a
+    2,510 policy is a separate confirmed payment; the key reserves it AND keeps the bill."""
+    lo = min(o.amount for o in s.occurrences)
+    hi = max(o.amount for o in s.occurrences)
+    if hi - lo < 1e-9:
+        return abs(amount - lo) < 0.005
+    return lo - 1e-9 <= amount <= hi + 1e-9
 
 
 TERMINATION_GRACE_DAYS = 7

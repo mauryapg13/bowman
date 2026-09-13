@@ -11,6 +11,7 @@ Scores are from `python3 code/evaluation/score.py`; "exact" means to the cent, "
 | | before (main 803cf7a) | after (this branch) |
 |---|---|---|
 | `amount_safe_to_pay` exact / within 0.5 % | 5 / 11 | 5 / 12 |
+| mean abs / mean rel error on `amount_safe_to_pay` | 100,219 / 13.5 % | 100,117 / **12.7 %** |
 | `affordability_status` | 22 | **23** |
 | `recommended_payment_method` | 23 | 23 |
 | `payment_plan` | 22 | 22 |
@@ -20,7 +21,7 @@ Scores are from `python3 code/evaluation/score.py`; "exact" means to the cent, "
 | all three categoricals exact | 21 (84 %) | **22 (88 %)** |
 | rows exact on all 7 columns | 10 | 10 |
 
-One new rule (R7) was found and shipped. The remaining `amount_safe_to_pay` residuals are **not a
+Two new rules (R7, R8) were found and shipped; each fixes one sample row's curve to within estimator noise and breaks none. The remaining `amount_safe_to_pay` residuals are **not a
 hidden rule**: §3 proves the key's per-stream amounts are the data generator's own base parameters,
 which the history only lets us estimate to a few percent. That boundary is stated with counts in §4.
 
@@ -58,8 +59,8 @@ and never wrote to disk. From n uniform draws with half-width w the base is only
 
 ## 2. Decoded rules (all counted on the 25)
 
-Rules R1–R6 and R8–R10 were established in v1 (`docs/v1_log.md`) and are restated here with their
-derivation so the ruleset is complete in one place; R7 is new in this branch.
+Rules R1–R6 and R9–R11 were established in v1 (`docs/v1_log.md`) and are restated here with their
+derivation so the ruleset is complete in one place; R7 and R8 are new in this branch.
 
 | # | rule | derives from | count |
 |---|---|---|---|
@@ -70,11 +71,12 @@ derivation so the ruleset is complete in one place; R7 is new in this branch.
 | R5 | Variable-spend categories restart at `request_date + 5` (cadence unchanged), not at last occurrence + cadence. | "Forecast essential variable spending conservatively" (AGENTS §6.3) | v1 #13/#23; re-verified here (`scratch/schedule_cmp.py`): the key's pre-trough count vector matches this on 16/20 rows, the pure clock on 9/20 |
 | R6 | Stream amount = round(mean with the single min and max dropped); constant series exact. | best history estimator of G1's base amount that is outlier-robust; rounding matches G2/G3 (integers) | v1 #20: exact 5 → 10 (tol); here: among the top of the 504-combo sweep |
 | **R7** | **A pending/scheduled occurrence of a variable-spend category dated after the request is reserved as a recorded placement but does not replace the category's recurring forecast: the stream still restarts at day 5; a predicted day equal to a recorded day is skipped, never doubled.** | problem_statement 90-day check: forecast "using recurring income and expenses, **confirmed future payments**" — both; "Reserve pending debits" (AGENTS §6.3) | **fixes 21** (residual +31.05 → +5.00; status/earliest/spending/plan now match), **0 broken, 24 unchanged**. On the 250: rows 41, 101, 141 change |
-| R8 | Forecast horizon 84 days (12 weeks). | contract says 90; no key decision depends on days 85–90 and three rows require ignoring a bill on day 87–89; any horizon 77–86 fits | v1 #22: fixes 08, 12, 13; 0 broken |
-| R9 | `reduce_to` amount = the row's `minimum_allowed_amount`; `event_id` = latest recorded occurrence of the stream; only non-protected flexible streams in permitted categories. | problem_statement `reduce_to:<event_id>:<new_amount>`; samples 06/11/21 | v1 #31 correction; 3/3 sample change strings reproduced when the curve agrees |
-| R10 | Plan ranking exactly as problem_statement "Choosing Between Safe Plans" (deadline, no changes, total cost, earlier start, fewer payments, lowest option id); `wait` only when the user accepts full payment. | verbatim | 22/25 categoricals; the 3 misses (06, 11, 19) are all curve-boundary cases, not ranking |
+| **R8** | **A `scheduled` debit joins a bill stream as its next occurrence only when its amount is the bill's amount (constant series) or inside the recorded [min, max] (varying series); otherwise it is an additional confirmed payment and the bill is still forecast. Credits keep the existing absorption.** | conflict rules 1 and 4: a scheduled row with another amount and a generic description ("Scheduled insurance payment" 1,830 vs a 2,510 policy) is not an amendment of the bill; when unresolved take the financially safer reading | **fixes 24** (residual +2,673 → +163), **0 broken, 24 unchanged**. On the 250: rows 44, 84, 104, 224 change; 6 message re-reads (see §3) |
+| R9 | Forecast horizon 84 days (12 weeks). | contract says 90; no key decision depends on days 85–90 and three rows require ignoring a bill on day 87–89; any horizon 77–86 fits | v1 #22: fixes 08, 12, 13; 0 broken |
+| R10 | `reduce_to` amount = the row's `minimum_allowed_amount`; `event_id` = latest recorded occurrence of the stream; only non-protected flexible streams in permitted categories. | problem_statement `reduce_to:<event_id>:<new_amount>`; samples 06/11/21 | v1 #31 correction; 3/3 sample change strings reproduced when the curve agrees |
+| R11 | Plan ranking exactly as problem_statement "Choosing Between Safe Plans" (deadline, no changes, total cost, earlier start, fewer payments, lowest option id); `wait` only when the user accepts full payment. | verbatim | 22/25 categoricals; the 3 misses (06, 11, 19) are all curve-boundary cases, not ranking |
 
-## 3. R7 in detail (the one new rule)
+## 3. R7 and R8 in detail (the two new rules)
 
 Sample `request_21` (USD): transport recurs every 21 days (last 26 Mar); a `pending` "Pending fuel
 authorization" of 53 settles on 5 Apr, two days after the request. Before R7 the pending row became
@@ -82,12 +84,31 @@ the stream's latest recorded occurrence, which switched off the day-5 restart, s
 forecast before the 12 Apr trough; the key's outflow is 47 higher (its transport base amount, ≈ our
 42), and with it the full payment is unsafe without the two spending changes the key lists.
 After R7 the recorded 53 and a predicted transport run on day 5 both stand; residual +5.00
-(estimator noise on one item), and all categorical columns match.
+(estimator noise on one item); status, method, plan and earliest date match. `spending_changes_needed`
+still differs (`stop:event_1816` vs the key's `stop:event_1815|reduce_to:event_1816:23.50`): on a curve
+5 units higher, stopping the 47 streaming plan alone closes the gap, so the 5-unit residual decides it.
 
 Implementation: `code/ledger.py` `_phase_reset` (no longer keeps the anchor when a future
 occurrence exists) and `_stream_placements` (for reset streams only past occurrences gate
 prediction; a predicted day that coincides with a recorded day is skipped). Test:
 `tests/test_ledger.py::test_variable_streams_restart_at_the_request`.
+
+Sample `request_24` (INR): insurance is 2,510 on the 6th of every month. A `scheduled` "Scheduled
+insurance payment" of 1,830 settling 11 Jan (+36 days after the last policy payment, inside the
+±10-day absorption window) was taken as the stream's next occurrence, so the 6 Jan policy payment
+was never forecast. The key's outflow is 2,673 higher = 2,510 + 163 (0.9 % noise on the other items):
+it reserves the scheduled 1,830 **and** keeps the 2,510 bill. Across all 275 users the absorption
+touched 14 non-salary scheduled rows: 6 "Scheduled bill payment retry" (amount inside the bill's
+range — still absorbed, the retry *is* the month's bill after a failed attempt), 4 "Scheduled utility
+debit" (+37 d, ≈ 60 % of the bill), 2 "Scheduled insurance payment", 1 "Scheduled school fee" (the
+last three families have another amount — no longer absorbed). Implementation: `code/recurrence.py`
+`_absorb` / `_amount_compatible`.
+
+Side effect to disclose: the message-operation port's cache key includes the stream view, so the
+changed absorption for 6 users triggered 6 live GLM-5.3-Flash calls (≈ $0.003) during the R8
+experiment; their results are committed under `code/cache/` and the final run is offline again
+(0 live calls). One of them (user_104) now reads "confirmed base salary is ZAR 35860" as an
+`amend_stream` where the earlier view returned `none`; that flips request_104 to `affordable_now`.
 
 ## 4. Rules we could not decode (honest boundary)
 
@@ -116,7 +137,7 @@ and only the base amounts differ.
 | 21 | USD | +5 (−1.1 %) | 7 | yes (after R7) | noise |
 | 22 | EUR | +2 (−1.3 %) | 4 | yes | unique grid solution: key dining 17, groceries 25 vs our 16, 24 |
 | 23 | ZAR | +28.8 (−0.2 %) | 5 | yes | noise |
-| 24 | INR | +2,673 (−13 %) | 7 | **no** | one placement more in the key (≈ 2 transports or dining + something); not identifiable |
+| 24 | INR | +163 (−0.9 %) after R8 (was +2,673) | 8 | yes | the missing item was the regular insurance bill dropped by the absorption → R8 |
 | 25 | IDR | −26 k (+0.4 %) | 6 | yes | noise |
 
 Rows 01, 08, 09, 12, 16 are exact (08 is the only uncapped one).
@@ -139,12 +160,12 @@ Ruled out this session, each counted on the 25 (v1_log #32–#37):
 - **Shared noise across streams** (G5): none, so the base amounts cannot be solved exactly.
 
 What would decode the rest: nothing inside `dataset/`. The base amounts and the generator's own
-forward schedule for the four schedule-mismatch rows (04, 10, 17, 24) are not in the files.
+forward schedule for the three schedule-mismatch rows (04, 10, 17) are not in the files.
 
 ## 5. Final numbers
 
-`python3 code/evaluation/score.py` on `feat/ruleset` (commit b4d5754):
+`python3 code/evaluation/score.py` on `feat/ruleset` (after R7 + R8):
 amount 48 % (tol) / 5 exact, status 92 %, method 92 %, plan 88 %, earliest 92 %, spending 88 %,
-explanation 72 %, all-three 88 %, mean abs safe error 100,218, calibration mean |Δ| 119,306.
+explanation 72 %, all-three 88 %, mean abs safe error 100,117 (rel 12.7 %), calibration mean |Δ| 119,187.
 `python3 -m pytest tests -q`: 81 passed. `python3 code/main.py` twice: identical
-sha256 `b7170dd06836afbdc9aa3f1040efcd5310609ac36c759227446eafa09b93c477`; 250 rows; 0 live model calls.
+sha256 `2c0cf3bf72e3fa429d58742e7e9b6f535835b1251147c18ffee2efe18fe73d2a`; 250 rows; 0 live model calls.
