@@ -28,7 +28,7 @@ class RunConfig:
 
 
 MVP = RunConfig()
-FULL = RunConfig(links=True, vision=True, ops=False, spending_changes=True)   # flipped on as V1 tasks land
+FULL = RunConfig(links=True, vision=True, ops=True, spending_changes=True)   # flipped on as V1 tasks land
 
 
 @dataclass(frozen=True, slots=True)

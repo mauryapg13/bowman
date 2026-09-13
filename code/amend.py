@@ -13,6 +13,7 @@ from inclusion import Event
 from load import Message, convert, fx_key, FxRateMissing
 from ports.ops import Operation
 from recurrence import Amendment, OneOff, Stream
+from ledger import _add_months
 
 
 def rate_on_or_before(amount: float, currency: str, home: str, on: date, fx: dict[str, float]) -> tuple[float, date | None]:
@@ -57,6 +58,19 @@ def apply(streams: tuple[Stream, ...], oneoffs: tuple[OneOff, ...], events: list
                         "amount": round(s.amount, 2), "cadence_days": s.cadence_days} for s in by_stream.values()]
         for op in ops_port.operations(m.message_id, m.message_text, rel, stream_view):
             if op.op == "none":
+                applied.append(op)
+                continue
+            if op.op == "start_stream":
+                # Confirmed income for a user with no income stream (spec §4.7). Monthly; the anchor is
+                # set one month before the confirmed date so the first predicted occurrence lands on it.
+                eff = op.effective_date
+                amount, rate_date = rate_on_or_before(op.new_amount or 0.0, op.currency or home_currency, home_currency, eff, fx)
+                sid = f"stream_{m.user_id}_msg{len(by_stream) + 1}"
+                by_stream[sid] = Stream(
+                    stream_id=sid, user_id=m.user_id, direction="credit", category="salary", description=None,
+                    cadence_days=31, amount=amount, anchor=_add_months(eff, -1), occurrences=(),
+                    flexibility="fixed", minimum_allowed_amount=None, latest_event_id="",
+                    amendments=(), provenance=(f"amend:start_stream:{m.message_id} from {eff} amount_original={op.new_amount} {op.currency} rate_date={rate_date}",))
                 applied.append(op)
                 continue
             if op.target_kind == "stream":
