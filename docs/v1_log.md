@@ -39,7 +39,9 @@ Baseline (MVP, docs/mvp_results.md): cat 64%, Δ 250,286.
 
 | 24 | trim proportion (0.1n / 0.2n / 0.25n, floor/round/ceil), 2 each side, ceil/floor rounding | 76–84% | 140k–143k | **no change** | trim-1 + round stays best; the small residuals (06 −6, 13 +15, 14 +21, 15 +15, 20 −9, 22 +2, 23 +29) are invariant across estimators → structural (one small item in/out of the window), not estimator noise. The key's safe amounts carry the opening balance's cents (597.30 vs 603.30), so no rounding of the final number can bridge them |
 
-## Open misses after #24 (see score.py output)
+| 25 | estimator for fixed varying bills (last / mean / median / max / last-3); per-category estimator search (729 combos, 9 rules × 3 categories); windowed trimmed means (30–120 days, last 4–12); fixed-stream placement by day arithmetic; rounding variable estimates to 5/10 units | ≤84% | — | **no change** | nothing beats trim-1 + round on exact rows (11); the per-category search reduces the small-row residual sum only 98 → 84 and is fitted; windowing is worse everywhere. Residual/σ check: on 11 of 16 rows the residual is within ~2σ of our own estimator's sampling error (σ = sd/√n per stream, summed over the placements before the trough) — i.e. the noise floor of estimating a hidden rate from ~20 draws. Above 2σ: 14, 15, 19, 07 (one placement in/out) |
+
+## Open misses after #25 (see score.py output)
 
 - request_05: ended payroll cut too early — our min 7,777 vs key 13,837 (key still counts one more occurrence or cuts later expenses).
 - after #23 the categorical misses are 06, 11, 19, 21
