@@ -48,7 +48,9 @@ Baseline (MVP, docs/mvp_results.md): cat 64%, Δ 250,286.
 
 | 29 | boundary study of 06/11/19/21 after #27: margins of the key's plan on our curve — 06 **−4.10** (full+stop), 11 −156k (full+reduce), 21 +50.45 (full w/o changes safe for us, unsafe for the key), 19 +1,250 (partial split); spending-change semantics variant (effective from anchor) | 84% | — | no change | signs of the residuals are mixed across rows (06/07/17/20 pessimistic, 13/14/15/19/21/23 optimistic), so no tolerance or bias tips the boundary rows consistently. On the 250, 22 decisions sit within 1% of balance of a safety boundary (47 within 2%) — the expected coin-flip exposure |
 
-## Open misses after #29 (see score.py output)
+| 30 | "impose rules that give the result, then look for the why": per row, the smallest set of deviations (per-stream estimator ∈ {ceil/floor trim, mean, median, last, max, min}, ±1 occurrence) that reproduces the key's pre-trough outflow exactly | — | — | **no common rule** | 06 = shopping→min & utilities→last; 14 = groceries→last & shopping→min; 15 = transport→max & utilities→max; 22 = transport→last; 18 = transport→floor; 20 = three deviations; 13/23 none within three. Every row is fixed by a different pair of contradictory statistics — the signature of per-purchase noise, not of a hidden rule |
+
+## Open misses after #30 (see score.py output)
 
 - request_05: ended payroll cut too early — our min 7,777 vs key 13,837 (key still counts one more occurrence or cuts later expenses).
 - after #23 the categorical misses are 06, 11, 19, 21
