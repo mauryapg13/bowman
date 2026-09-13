@@ -1,0 +1,15 @@
+{
+  "model": "reviewed-transcription",
+  "provider": "table",
+  "result": {
+    "amount": 1995.0,
+    "amount_raw": "1995.00",
+    "backend": "table",
+    "confidence": 0.98,
+    "currency": "INR",
+    "event_id": "event_3051",
+    "field_used": "Total",
+    "image_id": "image_06",
+    "prompt_version": "vision-v1"
+  }
+}

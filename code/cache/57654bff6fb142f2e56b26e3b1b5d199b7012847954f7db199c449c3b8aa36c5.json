@@ -1,0 +1,16 @@
+{
+  "model": "z-ai/glm-5.3-flash",
+  "provider": "openrouter",
+  "raw": [
+    {
+      "currency": "INR",
+      "effective_date": null,
+      "ended": false,
+      "new_amount": 164880,
+      "one_occurrence_only": true,
+      "op": "amend_stream",
+      "target_id": "stream_user_103_1",
+      "target_kind": "stream"
+    }
+  ]
+}

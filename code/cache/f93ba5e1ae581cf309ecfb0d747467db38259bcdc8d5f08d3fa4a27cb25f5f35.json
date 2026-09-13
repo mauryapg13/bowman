@@ -1,0 +1,15 @@
+{
+  "model": "reviewed-transcription",
+  "provider": "table",
+  "result": {
+    "amount": 9968.0,
+    "amount_raw": "9,968.00",
+    "backend": "table",
+    "confidence": 0.98,
+    "currency": "INR",
+    "event_id": "event_9806",
+    "field_used": "Grand Total (Incl Taxes)",
+    "image_id": "image_15",
+    "prompt_version": "vision-v1"
+  }
+}

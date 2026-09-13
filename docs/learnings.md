@@ -68,6 +68,49 @@ file is the *why* and the *gotchas*. Append, never rewrite history; date each en
 - **`request_12`**: capacity == requested yet `affordable_with_plan/installments`
   because the user rejects full payment — capacity and recommendation are independent.
 
+## Learned in V1 (2026-09-13, from the calibration table)
+
+- **A scheduled salary that matches no stream must still become income** (user_01: one
+  prorated salary + "Next confirmed salary"; the key is `affordable_now`, impossible without
+  income after 15 Mar). Promote it to a monthly stream anchored on itself.
+- **Absorption must pick the closest-amount stream** when a user has two salary streams
+  (user_13) — otherwise the scheduled row is a one-off *and* a predicted occurrence: double count.
+- **Streams end when they skip a beat**: expected next occurrence > 7 days before the user's
+  last settled event ⇒ ended (user_05 "Final employer payroll", user_13 second income). This
+  catches terminations without reading wording.
+- **Messages can create income only when no income stream exists** (`start_stream`, allow-list
+  target `new:salary`): users 14/15 have zero history and the key counts the confirmed salary.
+- **GLM 5.3 Flash handles the Indonesian messages and the closed enum well** at temperature 0;
+  ~1,400 input / ~370 output tokens per message; whole cache ≈ $0.11.
+- **Determinism test = full CLI run twice**; with a live provider and a cold cache that is
+  ~200 calls × ~5 s. Warm the cache first (run `main.py` once) or the suite looks hung.
+- **Stream amount estimator**: median vs mean vs last-3 made no consistent difference on
+  categoricals; residual deltas of a few percent remain on 4–5 users and are not the estimator.
+- The `Weekly app earnings`-style gig income + "payout still pending" message (request_10):
+  the key drops ~one stream's worth; not identifiable from the text — left as a known miss.
+
+- **Cash moves on `settlement_date`** — recurrence anchors, cadence and placements must use
+  it (request_07: salary event 15th, settled 23rd; key's earliest date is the 23rd).
+- **Plot the curves before fitting.** All 25 minima sit on the pre-payday trough, so only
+  the first ~10 days of forecast matter for `amount_safe_to_pay`. That reframed the search
+  from "which statistic" to "which phase": the key restarts variable-spend streams at the
+  request (first occurrence ~day 3), not at last-occurrence + cadence. Mean error 248k → 88k,
+  categoricals unchanged. (`docs/v1_log.md` #13)
+- **The key's variable-spend estimator is not median/mean/last/last-N × median-gap/mean-gap/7/14**
+  (30-combo grid, ≤2 of 20 rows exact). Residuals of a few percent on ~6 users remain; exactness
+  on `amount_safe_to_pay` is not reachable by tuning this family. Don't spend more time there.
+- **Variable-spend amounts are i.i.d. noise** (800 streams: lag-1 autocorrelation −0.08, no trend,
+  every predictor at the ~15% floor, mean/median best). Figures: `docs/why_variable_spend_is_noise.png`,
+  `docs/sample_curves.png`. No "prediction factor" can help; don't build one.
+- **The key's outflow totals are integers on 12/20 sample rows** (EUR/USD users included), while
+  every fixed bill and median in our streams carries cents. The key rounds its predicted amounts
+  somewhere we don't; rounding our medians (1/10/100 units) changes nothing, so the rounding is
+  applied to a different base. Not decodable from 20 rows; open lead.
+- **A cadence of 0 days loops the ledger forever** — guard `cadence_days >= 1` (hit during the grid
+  with a last-gap rule on same-day occurrences).
+- **Ops cache keys must not depend on the forecast estimator**: the model's stream view uses the
+  median of occurrences and the median gap, so experiments don't trigger live calls.
+
 ## Engineering gotchas
 
 - The starter shipped an **empty `code/evaluation/main.py`**; with `code/evaluation`

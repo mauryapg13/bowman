@@ -1,0 +1,16 @@
+{
+  "model": "z-ai/glm-5.3-flash",
+  "provider": "openrouter",
+  "raw": [
+    {
+      "currency": "EUR",
+      "effective_date": "2025-08-15",
+      "ended": false,
+      "new_amount": 2717.0,
+      "one_occurrence_only": false,
+      "op": "amend_stream",
+      "target_id": "stream_user_14_2",
+      "target_kind": "stream"
+    }
+  ]
+}

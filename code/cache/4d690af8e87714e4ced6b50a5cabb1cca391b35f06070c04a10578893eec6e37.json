@@ -1,0 +1,15 @@
+{
+  "model": "reviewed-transcription",
+  "provider": "table",
+  "result": {
+    "amount": 8528.0,
+    "amount_raw": "8528",
+    "backend": "table",
+    "confidence": 0.9,
+    "currency": "INR",
+    "event_id": "event_3231",
+    "field_used": "Grand Total (RS)",
+    "image_id": "image_07",
+    "prompt_version": "vision-v1"
+  }
+}

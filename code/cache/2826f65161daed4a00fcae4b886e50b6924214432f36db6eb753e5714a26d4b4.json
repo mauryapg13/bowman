@@ -1,0 +1,15 @@
+{
+  "model": "reviewed-transcription",
+  "provider": "table",
+  "result": {
+    "amount": 33.5,
+    "amount_raw": "$33.50",
+    "backend": "table",
+    "confidence": 0.98,
+    "currency": "USD",
+    "event_id": "event_7307",
+    "field_used": "Total",
+    "image_id": "image_12",
+    "prompt_version": "vision-v1"
+  }
+}

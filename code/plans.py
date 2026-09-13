@@ -25,9 +25,11 @@ class RunConfig:
     ops: bool = False
     spending_changes: bool = False
     reapply_settled_past: bool = False      # ablation-only negative control
+    variable_first_day: int | None = 3      # variable-spend phase: first occurrence this many days after the request; None = last + cadence
 
 
 MVP = RunConfig()
+FULL = RunConfig(links=True, vision=True, ops=True, spending_changes=True)   # flipped on as V1 tasks land
 
 
 @dataclass(frozen=True, slots=True)
@@ -116,7 +118,7 @@ def candidates(request: Request, profile: Profile, options: tuple[PaymentOption,
         for subset in combinations(eligible, size):
             if len({c.stream_id for c in subset}) < size:      # stop and reduce on the same stream: skip
                 continue
-            new_streams = spending.apply(streams, subset)
-            led2 = LG.forecast(new_streams, oneoffs, led.start, led.opening, led.floor, led.user_id)
+            new_streams = spending.apply(streams, subset, effective=request.request_date)
+            led2 = LG.forecast(new_streams, oneoffs, led.start, led.opening, led.floor, led.user_id, variable_first_day=config.variable_first_day)
             out.extend(base_candidates(request, options, led2, cap, tuple(subset)))
     return out

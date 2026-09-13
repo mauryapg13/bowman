@@ -1,0 +1,15 @@
+{
+  "model": "reviewed-transcription",
+  "provider": "table",
+  "result": {
+    "amount": 822.05,
+    "amount_raw": "822.05",
+    "backend": "table",
+    "confidence": 0.7,
+    "currency": "INR",
+    "event_id": "event_1786",
+    "field_used": "Amount due after 06-Feb-2026",
+    "image_id": "image_05",
+    "prompt_version": "vision-v1"
+  }
+}

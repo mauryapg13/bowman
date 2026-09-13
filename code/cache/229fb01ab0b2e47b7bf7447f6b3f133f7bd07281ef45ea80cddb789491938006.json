@@ -1,0 +1,16 @@
+{
+  "model": "z-ai/glm-5.3-flash",
+  "provider": "openrouter",
+  "raw": [
+    {
+      "currency": "EUR",
+      "effective_date": "2026-04-15",
+      "ended": false,
+      "new_amount": 1529,
+      "one_occurrence_only": false,
+      "op": "start_stream",
+      "target_id": "new:salary",
+      "target_kind": "stream"
+    }
+  ]
+}

@@ -135,3 +135,23 @@ def test_determinism():
     a = LG.forecast([s], [], START, 500, 0)
     b = LG.forecast([s], [], START, 500, 0)
     assert a == b
+
+
+def test_variable_streams_restart_at_the_request():
+    """spec §4.2 / v1_log #13: a category-level stream (description None) predicts its
+    first occurrence VARIABLE_FIRST_DAY days after the request, then every cadence;
+    a description-level stream keeps last + cadence."""
+    from recurrence import Occurrence, Stream
+    occ = (Occurrence("event_1", START - timedelta(days=2), 50.0),)
+    var = Stream("stream_user_9_1", "user_9", "debit", "groceries", None, 7, 50.0, START - timedelta(days=2), occ, "fixed", None, "event_1")
+    fixed = Stream("stream_user_9_2", "user_9", "debit", "rent", "Rent", 7, 50.0, START - timedelta(days=2), occ, "fixed", None, "event_1")
+    led = LG.forecast([var, fixed], [], START, 1000, 0)
+    assert days_of(led, "predicted", "stream_user_9_1")[:3] == [3, 10, 17]
+    assert days_of(led, "predicted", "stream_user_9_2")[:3] == [5, 12, 19]
+    off = LG.forecast([var], [], START, 1000, 0, variable_first_day=None)
+    assert days_of(off, "predicted", "stream_user_9_1")[:3] == [5, 12, 19]
+    # a recorded occurrence after the request keeps its real anchor
+    fut = Stream("stream_user_9_3", "user_9", "debit", "dining", None, 7, 50.0, START + timedelta(days=4),
+                 occ + (Occurrence("event_2", START + timedelta(days=4), 50.0),), "fixed", None, "event_2")
+    led = LG.forecast([fut], [], START, 1000, 0)
+    assert days_of(led, "recorded") == [4] and days_of(led, "predicted")[:2] == [11, 18]

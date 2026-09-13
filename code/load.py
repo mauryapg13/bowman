@@ -301,9 +301,10 @@ def _load_events(path: Path, profiles: dict[str, Profile],
         elif currency == home:
             amount = original
         else:
-            if settlement is None:
-                raise FxRateMissing(f"{r[c['event_id']]}: foreign currency with no settlement_date")
-            amount = convert(original, currency, home, settlement, fx)
+            # AGENTS.md §6.1: the row for the settlement date. Non-cash rows have no settlement
+            # date (they are excluded later anyway); use the event date so loading never depends
+            # on a row that carries no cash.
+            amount = convert(original, currency, home, settlement or date.fromisoformat(r[c["event_date"]]), fx)
         ev = RawEvent(
             event_id=r[c["event_id"]],
             user_id=user_id,
